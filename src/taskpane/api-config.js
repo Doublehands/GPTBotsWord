@@ -258,4 +258,59 @@ if (typeof module !== 'undefined' && module.exports) {
  *    - response_mode: "blocking" (阻塞式响应)
  *    - conversation_config: 对话配置选项
  * 5. 如需修改配置，请编辑上面的API_CONFIG对象
- */ 
+ */
+
+// 本地代理API配置
+window.localProxyAPI = {
+    // 本地代理服务器URL
+    proxyUrl: 'http://localhost:8081',
+    
+    // 创建对话
+    createConversation: async function() {
+        const response = await fetch(`${this.proxyUrl}/api/conversation`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: API_CONFIG.userId
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    },
+    
+    // 发送消息
+    sendMessage: async function(conversationId, message) {
+        const response = await fetch(`${this.proxyUrl}/api/message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                conversation_id: conversationId,
+                messages: [
+                    {
+                        role: 'user',
+                        content: message
+                    }
+                ],
+                response_mode: 'blocking',
+                conversation_config: {
+                    long_term_memory: false,
+                    short_term_memory: false
+                }
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    }
+}; 

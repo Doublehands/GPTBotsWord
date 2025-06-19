@@ -8,9 +8,11 @@
 // 应用状态
 let currentTool = 'custom';
 let currentContentSource = 'selection';
+let currentInsertPosition = 'replace'; // 当前选中的插入位置
 let currentResult = '';
 let conversationHistory = [];
 let currentConversationId = null; // GPTBots对话ID
+let isInitialized = false; // 防止重复初始化
 
 // 引入API配置
 // 注意：在HTML文件中需要先引入 api-config.js
@@ -18,28 +20,25 @@ let currentConversationId = null; // GPTBots对话ID
 // Predefined AI tool prompts
 const AI_TOOLS = {
     translate: {
-        name: 'Translate',
-        prompt: 'Please translate the following content to {language}, keeping the original format:\n\n{content}'
+        name: '翻译',
+        prompt: 'NO.001\n\n{content}'
     },
     polish: {
-        name: 'Polish',
-        prompt: 'Please polish the following text to make it more fluent and natural while keeping the original meaning:\n\n{content}'
+        name: '润色',
+        prompt: 'NO.002：\n\n{content}'
     },
     academic: {
-        name: 'Academic',
-        prompt: 'Please rewrite the following content into academic text with more formal expressions:\n\n{content}'
+        name: '审批建议',
+        prompt: 'NO.003：\n\n{content}'
     },
     summary: {
-        name: 'Summary',
-        prompt: 'Please generate a concise summary for the following content:\n\n{content}'
+        name: '总结',
+        prompt: 'NO.004：\n\n{content}'
     },
-    grammar: {
-        name: 'Grammar',
-        prompt: 'Please check the following text for grammar and spelling errors, and provide correction suggestions:\n\n{content}'
-    },
+
     custom: {
-        name: 'Custom',
-        prompt: '{userInput}\n\nContent:\n{content}'
+        name: '自定义需求',
+        prompt: '{userInput}\n\n内容：\n{content}'
     }
 };
 
@@ -56,7 +55,13 @@ Office.onReady((info) => {
 });
 
 function initializeApp() {
-    console.log('开始初始化 Word GPT Plus...');
+    // 防止重复初始化
+    if (isInitialized) {
+        console.log('⚠️ 应用已初始化，忽略重复初始化');
+        return;
+    }
+    
+    console.log('开始初始化 GPTBots copilot ...');
     
     try {
         // 检查API配置是否已加载
@@ -66,9 +71,8 @@ function initializeApp() {
         
         // 检查必要的DOM元素是否存在
         const requiredElements = [
-            'startBtn', 'continueBtn', 'insertBtn', 'copyBtn', 'clearBtn',
-            'conversationInput', 'resultBox', 'errorMessage', 'successMessage',
-            'replyLanguage', 'insertType'
+            'insertBtn', 'copyBtn',
+            'resultBox', 'errorMessage', 'successMessage'
         ];
         
         for (const elementId of requiredElements) {
@@ -92,7 +96,7 @@ function initializeApp() {
         updateUI();
         
         // 显示API配置信息
-        console.log('Word GPT Plus 已初始化');
+        console.log('GPTBots copilot 已初始化');
         console.log('API配置:', {
             baseUrl: API_CONFIG.baseUrl,
             createConversationUrl: getCreateConversationUrl(),
@@ -100,20 +104,37 @@ function initializeApp() {
             userId: API_CONFIG.userId
         });
         
-        // 在界面上显示连接状态
-        showSuccessMessage('🎉 Word GPT Plus plugin is ready! Select text and use AI tools.');
+        showSuccessMessage('🎉 GPTBots copilot已经准备就绪！');
         
         // 更新结果框显示
         const resultBox = document.getElementById('resultBox');
         if (resultBox) {
-            resultBox.innerHTML = `
-                <div style="text-align: center; color: #10b981; font-weight: 500;">
-                    🎉 Plugin loaded successfully!
-                </div>
-            `;
+            const resultContent = document.getElementById('resultContent');
+            if (resultContent) {
+                resultContent.textContent = '选择AI工具后点击 "开始处理" 获取Agent响应';
+            } else {
+                resultBox.textContent = '选择AI工具后点击 "开始处理" 获取Agent响应';
+            }
+            resultBox.classList.remove('loading');
         }
         
-        console.log('Word GPT Plus 初始化完成！');
+        // 初始化自定义输入框显示状态（默认选中custom）
+        if (currentTool === 'custom') {
+            showCustomInput();
+        } else {
+            hideCustomInput();
+        }
+        
+        // 初始化按钮状态
+        const insertBtn = document.getElementById('insertBtn');
+        if (insertBtn) {
+            insertBtn.disabled = true; // 初始禁用插入按钮
+        }
+        
+        console.log('GPTBots copilot 初始化完成！');
+        
+        // 标记为已初始化
+        isInitialized = true;
         
     } catch (error) {
         console.error('初始化失败:', error);
@@ -131,7 +152,7 @@ function initializeApp() {
         if (resultBox) {
             resultBox.innerHTML = `
                 <div style="text-align: center; color: #f59e0b; font-weight: 500;">
-                    ⚡ Word GPT Plus is starting...
+                    ⚡ GPTBots copilot is starting...
                 </div>
             `;
         }
@@ -150,11 +171,14 @@ function bindEventListeners() {
     aiToolBtns.forEach((btn, index) => {
         const toolName = btn.getAttribute('data-tool');
         console.log(`  - 按钮 ${index + 1}: ${btn.textContent} (data-tool: ${toolName})`);
-        btn.addEventListener('click', handleToolSelection);
         
-        // 测试按钮是否响应
-        btn.addEventListener('click', () => {
-            console.log(`AI工具按钮被点击: ${btn.textContent} (${toolName})`);
+        // 清除可能存在的旧事件监听器
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', (event) => {
+            console.log(`AI工具按钮被点击: ${newBtn.textContent} (${toolName})`);
+            handleToolSelection(event);
         });
     });
     
@@ -164,64 +188,65 @@ function bindEventListeners() {
     contentSourceBtns.forEach((btn, index) => {
         const sourceName = btn.getAttribute('data-source');
         console.log(`  - 按钮 ${index + 1}: ${btn.textContent} (data-source: ${sourceName})`);
-        btn.addEventListener('click', handleContentSourceSelection);
         
-        // 测试按钮是否响应
-        btn.addEventListener('click', () => {
-            console.log(`内容源按钮被点击: ${btn.textContent} (${sourceName})`);
+        // 清除可能存在的旧事件监听器
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', (event) => {
+            console.log(`内容源按钮被点击: ${newBtn.textContent} (${sourceName})`);
+            handleContentSourceSelection(event);
         });
     });
     
-    // 主要操作按钮
-    console.log('绑定主要操作按钮:');
-    const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-        startBtn.addEventListener('click', handleStart);
-        startBtn.addEventListener('click', () => console.log('开始处理按钮被点击'));
-        console.log('  - 开始处理按钮已绑定');
-    }
-    
-    const continueBtn = document.getElementById('continueBtn');
-    if (continueBtn) {
-        continueBtn.addEventListener('click', handleContinue);
-        continueBtn.addEventListener('click', () => console.log('继续对话按钮被点击'));
-        console.log('  - 继续对话按钮已绑定');
-    }
+    // 主要操作按钮（已移除不存在的按钮）
+    console.log('跳过不存在的主要操作按钮绑定');
     
     // 结果操作按钮
     console.log('绑定结果操作按钮:');
     const insertBtn = document.getElementById('insertBtn');
     if (insertBtn) {
-        insertBtn.addEventListener('click', handleInsert);
-        insertBtn.addEventListener('click', () => console.log('插入按钮被点击'));
-        console.log('  - 插入按钮已绑定');
+        // 清除可能存在的旧事件监听器
+        insertBtn.replaceWith(insertBtn.cloneNode(true));
+        const newInsertBtn = document.getElementById('insertBtn');
+        newInsertBtn.addEventListener('click', () => {
+            console.log('插入文档按钮被点击');
+            handleInsert();
+        });
+        console.log('  - 插入文档按钮已绑定');
     }
     
     const copyBtn = document.getElementById('copyBtn');
     if (copyBtn) {
-        copyBtn.addEventListener('click', handleCopy);
-        copyBtn.addEventListener('click', () => console.log('复制按钮被点击'));
-        console.log('  - 复制按钮已绑定');
+        // 清除可能存在的旧事件监听器
+        copyBtn.replaceWith(copyBtn.cloneNode(true));
+        const newCopyBtn = document.getElementById('copyBtn');
+        newCopyBtn.addEventListener('click', () => {
+            console.log('开始处理按钮被点击');
+            handleStart();
+        });
+        console.log('  - 开始处理按钮已绑定（使用copyBtn）');
     }
     
-    const clearBtn = document.getElementById('clearBtn');
-    if (clearBtn) {
-        // 清除之前可能存在的事件监听器
-        clearBtn.onclick = null;
+    // 插入位置按钮
+    const insertPositionBtns = document.querySelectorAll('.insert-position-btn');
+    console.log(`绑定 ${insertPositionBtns.length} 个插入位置按钮:`);
+    insertPositionBtns.forEach((btn, index) => {
+        const position = btn.getAttribute('data-position');
+        console.log(`  - 按钮 ${index + 1}: ${btn.textContent} (data-position: ${position})`);
         
-        // 添加安全的事件监听器
-        clearBtn.addEventListener('click', function(event) {
-            try {
-                console.log('清空按钮被点击');
-                event.preventDefault();
-                handleClear();
-            } catch (error) {
-                console.error('清空按钮事件处理出错:', error);
-            }
+        // 清除可能存在的旧事件监听器
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', (event) => {
+            console.log(`插入位置按钮被点击: ${newBtn.textContent} (${position})`);
+            handleInsertPositionSelection(event);
         });
-        
-        console.log('  - 清空按钮已绑定（安全模式）');
-    }
+    });
+    
+    // clearBtn 已移除（HTML中不存在）
+    console.log('  - 清空按钮不存在，已跳过绑定');
     
     console.log('事件监听器绑定完成！');
 }
@@ -245,22 +270,24 @@ function handleToolSelection(event) {
         
         currentTool = newTool;
         
-        // 如果是自定义工具，聚焦到输入框
+        // 如果是自定义工具，显示输入框
         if (currentTool === 'custom') {
-            const inputElement = document.getElementById('conversationInput');
-            if (inputElement) {
-                inputElement.focus();
-                console.log('已聚焦到输入框');
-            }
+            showCustomInput();
+            console.log('显示自定义需求输入框');
+        } else {
+            hideCustomInput();
+            console.log('隐藏自定义需求输入框');
+        }
+        
+        // 如果是审批建议，显示特殊提示
+        if (currentTool === 'academic') {
+            showUserFriendlyMessage('审批建议功能将自动为选中文本添加批注，如果没有选中文本则在文档末尾插入建议内容');
         }
         
         // 更新UI状态
         updateUI();
         
         console.log(`工具选择完成: ${currentTool}`);
-        
-        // 显示成功消息
-        showSuccessMessage(`Selected "${AI_TOOLS[currentTool].name}" tool`);
         
     } catch (error) {
         console.error('处理工具选择时出错:', error);
@@ -292,26 +319,66 @@ function handleContentSourceSelection(event) {
         
         console.log(`内容源选择完成: ${currentContentSource}`);
         
-        // 显示成功消息
-        const sourceName = currentContentSource === 'selection' ? 'Selected Text' : 'Entire Document';
-        showSuccessMessage(`Selected "${sourceName}" as content source`);
-        
     } catch (error) {
         console.error('处理内容源选择时出错:', error);
         showUserFriendlyMessage('Content source selection failed, please try again');
     }
 }
 
+function handleInsertPositionSelection(event) {
+    console.log('handleInsertPositionSelection 被调用');
+    console.log('点击的元素:', event.target);
+    console.log('元素内容:', event.target.textContent);
+    
+    try {
+        // 更新选中状态
+        document.querySelectorAll('.insert-position-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // 更新当前插入位置
+        const newPosition = event.target.getAttribute('data-position');
+        console.log('选择的插入位置:', newPosition);
+        console.log('之前的插入位置:', currentInsertPosition);
+        
+        currentInsertPosition = newPosition;
+        
+        console.log(`插入位置选择完成: ${currentInsertPosition}`);
+        
+    } catch (error) {
+        console.error('处理插入位置选择时出错:', error);
+        showUserFriendlyMessage('Insert position selection failed, please try again');
+    }
+}
+
+// 开始处理功能（现在使用copyBtn按钮）
 async function handleStart() {
     console.log('🚀 开始处理按钮被点击！');
     console.log('当前工具:', currentTool);
     console.log('当前内容源:', currentContentSource);
     
+    const startBtn = document.getElementById('copyBtn');
+    
+    // 防止重复执行 - 如果按钮已禁用说明正在处理中
+    if (startBtn && startBtn.disabled) {
+        console.log('⚠️ 处理中，忽略重复点击');
+        return;
+    }
+    
     try {
-        // 第一步：显示开始处理
-        showLoading('🚀 Starting processing...');
+        // 禁用按钮并显示加载状态
+        if (startBtn) {
+            startBtn.disabled = true;
+            startBtn.classList.add('loading');
+            startBtn.innerHTML = '<span>⏳</span><span>处理中...</span>';
+        }
+        
+        // 清除之前的消息
         clearMessages();
-        showSuccessMessage(`Starting to process content with "${AI_TOOLS[currentTool].name}" tool`);
+        
+        // 第一步：显示开始状态
+        showLoading('📋 正在获取Word内容...');
         
         // 第二步：获取Word内容
         console.log('📋 正在获取Word内容...');
@@ -320,26 +387,26 @@ async function handleStart() {
         console.log('📋 内容长度:', content.length);
         
         if (!content || content.length === 0) {
-            throw new Error(`Cannot get ${currentContentSource === 'selection' ? 'selected' : 'document'} content. ${currentContentSource === 'selection' ? 'Please select some text in Word first.' : 'The document appears to be empty.'}`);
+            throw new Error(`未找到内容。请先${currentContentSource === 'selection' ? '选择一些文本' : '在文档中添加内容'}。`);
         }
-        
-        showLoading('📋 Reading content...');
         
         // 在控制台显示技术信息
         console.log(`📊 成功获取${currentContentSource === 'selection' ? '选中文本' : '文档内容'}: ${content.length} 个字符`);
         
-        // 向用户显示友好信息
-        showSuccessMessage(`Successfully got ${currentContentSource === 'selection' ? 'selected text' : 'document content'}`);
-        
         // 第三步：获取用户输入
-        const userInput = document.getElementById('conversationInput').value.trim();
+        const userInput = getUserInput();
         console.log('📋 用户输入:', userInput);
+        
+        // 如果是自定义工具但没有输入，提示用户
+        if (currentTool === 'custom' && !userInput) {
+            throw new Error('请在输入框中描述你的需求');
+        }
         
         // 第四步：构建提示词
         const prompt = buildPrompt(content, userInput);
         console.log('📋 构建的提示词:', prompt);
         
-        showLoading('🤖 AI processing...');
+        showLoading('🤖 AI正在处理中...');
         
         // 第五步：调用API
         console.log('📋 开始调用API...');
@@ -347,19 +414,39 @@ async function handleStart() {
         console.log('📋 API响应:', response);
         
         if (!response || response.length === 0) {
-            throw new Error('AI returned empty response');
+            throw new Error('AI返回了空响应');
         }
         
-        showLoading('✨ Preparing results...');
+        showLoading('✨ 正在准备结果...');
         
         // 第六步：显示结果
-        displayResult(response);
-        
-        // 在控制台显示技术信息
-        console.log(`📊 AI处理完成，生成结果: ${response.length} 个字符`);
+        console.log('📊 开始显示AI响应结果...');
+        try {
+            displayResult(response);
+            console.log(`📊 AI处理完成，生成结果: ${response.length} 个字符`);
+        } catch (displayError) {
+            console.error('❌ 显示结果时出错:', displayError);
+            // 即使显示失败，也要保存结果
+            currentResult = response;
+        }
         
         // 向用户显示友好信息
-        showSuccessMessage(`Processing complete! Click "Insert to Document" to add results to Word.`);
+        try {
+            showSuccessMessage(`处理完成！点击 "插入文档" 将结果添加到Word中。`);
+        } catch (msgError) {
+            console.error('❌ 显示成功消息时出错:', msgError);
+        }
+        
+        // 启用插入按钮
+        try {
+            const insertBtn = document.getElementById('insertBtn');
+            if (insertBtn) {
+                insertBtn.disabled = false;
+                console.log('✅ 插入按钮已启用');
+            }
+        } catch (btnError) {
+            console.error('❌ 启用插入按钮时出错:', btnError);
+        }
         
         console.log('🎉 处理完成！');
         
@@ -374,62 +461,38 @@ async function handleStart() {
         console.log('- 错误详情:', error.message);
         console.log('- 错误堆栈:', error.stack);
         
-        // 在结果区显示友好的消息而不是技术错误
-        const cleanContent = await getWordContent().catch(() => '您的内容');
+        // 显示友好的错误提示
+        showUserFriendlyMessage(error.message);
+        
+        // 显示默认结果框内容
         const resultBox = document.getElementById('resultBox');
         if (resultBox) {
-            resultBox.innerHTML = `Processing.`;
-            resultBox.classList.remove('loading');
-        }
-        
-        // 只显示友好的错误提示，不显示技术细节
-        if (error.message.includes('select') || error.message.includes('document') || error.message.includes('empty')) {
-            showUserFriendlyMessage(error.message);
-        } else {
-            showUserFriendlyMessage('AI processing temporarily unavailable, simulation result provided.');
+            const resultContent = document.getElementById('resultContent');
+            if (resultContent) {
+                resultContent.textContent = '处理失败，请检查输入内容后重试';
+            }
         }
         
     } finally {
+        // 恢复按钮状态
+        if (startBtn) {
+            startBtn.disabled = false;
+            startBtn.classList.remove('loading');
+            startBtn.innerHTML = '<span>🚀</span><span>开始处理</span>';
+        }
         hideLoading();
     }
 }
 
-async function handleContinue() {
+// handleContinue函数已移除（continueBtn不存在）
+async function handleContinue_REMOVED() {
     try {
-        const userInput = document.getElementById('conversationInput').value.trim();
-        if (!userInput) {
-            showUserFriendlyMessage('Please enter your question or instruction');
-            return;
-        }
-        
-        showLoading('💬 Continuing conversation...');
-        clearMessages();
-        
-        // 调用API进行继续对话
-        const response = await callConversationAPI(userInput, false); // false表示继续对话
-        
-        // 显示结果
-        displayResult(response);
-        showSuccessMessage('Conversation continued successfully!');
-        
-        // 清空输入框
-        document.getElementById('conversationInput').value = '';
+        // conversationInput不存在，显示提示
+        showUserFriendlyMessage('Continue conversation feature requires input field (not implemented)');
+        return;
         
     } catch (error) {
         console.error('继续对话失败:', error);
-        
-        // 显示友好的消息而不是技术错误
-        const resultBox = document.getElementById('resultBox');
-        if (resultBox) {
-            resultBox.innerHTML = `🤖 Continuing conversation...
-
-Your question: ${document.getElementById('conversationInput').value}
-
-Reply:
-Thank you for your question! AI conversation feature is being prepared.`;
-            resultBox.classList.remove('loading');
-        }
-        
         showUserFriendlyMessage('Chat feature is being prepared, please try again later');
     } finally {
         hideLoading();
@@ -487,38 +550,44 @@ async function getWordContent() {
 
 function buildPrompt(content, userInput) {
     const tool = AI_TOOLS[currentTool];
-    const language = document.getElementById('replyLanguage').value;
     
     let prompt = tool.prompt;
     
     // 替换模板变量
     prompt = prompt.replace('{content}', content);
     prompt = prompt.replace('{userInput}', userInput || '');
-    prompt = prompt.replace('{language}', getLanguageName(language));
+    
+    // 使用默认语言（中文）替换语言占位符
+    prompt = prompt.replace('{language}', '中文');
     
     return prompt;
 }
 
 function getLanguageName(code) {
     const languageMap = {
-        'zh': 'Chinese',
-        'en': 'English',
-        'ja': 'Japanese'
+        'zh': '中文',
+        'en': '英文',
+        'ja': '日文',
+        'ko': '韩文',
+        'fr': '法文',
+        'de': '德文',
+        'es': '西班牙文',
+        'ru': '俄文'
     };
-    return languageMap[code] || 'Chinese';
+    return languageMap[code] || '中文';
 }
 
 async function callConversationAPI(prompt, isNewConversation = true) {
     try {
         // 尝试使用本地代理API
-        if (typeof window.localProxyApi !== 'undefined') {
+        if (typeof window.localProxyAPI !== 'undefined') {
             console.log('🔄 使用本地代理API...');
             
             let conversationId = currentConversationId;
             
             if (isNewConversation || !conversationId) {
                 console.log('📞 创建新对话...');
-                const createResult = await window.localProxyApi.createConversation();
+                const createResult = await window.localProxyAPI.createConversation();
                 if (createResult.success) {
                     conversationId = createResult.conversationId;
                     currentConversationId = conversationId;
@@ -529,7 +598,7 @@ async function callConversationAPI(prompt, isNewConversation = true) {
             }
             
             console.log('📞 发送消息...');
-            const messageResult = await window.localProxyApi.sendMessage(conversationId, prompt);
+            const messageResult = await window.localProxyAPI.sendMessage(conversationId, prompt);
             if (messageResult.success) {
                 console.log('✅ 消息发送成功');
                 return messageResult.message;
@@ -617,13 +686,10 @@ async function callConversationAPI(prompt, isNewConversation = true) {
         
     } catch (error) {
         console.error('API调用错误:', error);
-        
-        // 不要向上抛出错误，而是返回模拟结果
-        console.log('💡 API调用失败，返回模拟结果');
         console.log('💡 建议：确保本地代理服务器运行: node local-server.js');
         
-        // 返回模拟结果而不是抛出错误
-        return `Processing...`;
+        // 抛出错误让上层函数处理
+        throw new Error(`API调用失败: ${error.message}`);
     }
 }
 
@@ -632,39 +698,75 @@ async function handleInsert() {
     console.log('📝 当前结果长度:', currentResult ? currentResult.length : 0);
     
     if (!currentResult) {
-        showUserFriendlyMessage('No content to insert. Please process some text with AI tools first.');
+        showUserFriendlyMessage('没有内容可插入，请先点击"开始处理"');
+        return;
+    }
+    
+    const insertBtn = document.getElementById('insertBtn');
+    
+    // 防止重复执行 - 如果按钮已禁用说明正在插入中
+    if (insertBtn && insertBtn.disabled) {
+        console.log('⚠️ 插入中，忽略重复点击');
         return;
     }
     
     try {
-        const insertType = document.getElementById('insertType').value;
+        // 禁用按钮并显示加载状态
+        if (insertBtn) {
+            insertBtn.disabled = true;
+            insertBtn.classList.add('loading');
+            insertBtn.innerHTML = '<span>⏳</span><span>插入中...</span>';
+        }
+        
+        let insertType = currentInsertPosition;
+        
+        // 如果是审批建议功能，强制使用批注模式
+        if (currentTool === 'academic') {
+            insertType = 'comment';
+            console.log('📝 审批建议功能：强制使用批注模式');
+        }
+        
         console.log('📝 插入类型:', insertType);
         
-        showLoading('📝 Inserting to document...');
+        showLoading('📝 正在将内容插入Word文档...');
         
-        await insertToWord(currentResult);
+        await insertToWordWithType(currentResult, insertType);
         
-        showSuccessMessage(`Content successfully ${insertType === 'replace' ? 'replaced selected text' : insertType === 'append' ? 'appended to document end' : 'inserted at cursor position'}`);
+        const insertTypeText = {
+            'replace': '替换选中文本',
+            'append': '添加到文档末尾',
+            'cursor': '在光标位置插入',
+            'comment': '生成批注'
+        }[insertType] || '插入';
         
-        console.log('📝 插入成功！');
+        showSuccessMessage(`内容已成功${insertTypeText}！`);
+        console.log('�� 插入成功！');
+        
+        // 强制清除加载状态
+        hideLoading();
         
     } catch (error) {
         console.error('📝 插入失败:', error);
-        showUserFriendlyMessage('Content insertion encountered issues, please retry or check Word document status');
+        showUserFriendlyMessage(`插入失败：${error.message}`);
     } finally {
+        // 恢复按钮状态
+        if (insertBtn) {
+            insertBtn.disabled = false;
+            insertBtn.classList.remove('loading');
+            insertBtn.innerHTML = '<span>📝</span><span>插入文档</span>';
+        }
         hideLoading();
     }
 }
 
-async function insertToWord(text) {
-    console.log('📝 insertToWord: 开始插入文本');
+async function insertToWordWithType(text, insertType) {
+    console.log('📝 insertToWordWithType: 开始插入文本');
     console.log('📝 要插入的文本长度:', text.length);
+    console.log('📝 插入类型:', insertType);
     
     return new Promise((resolve, reject) => {
         Word.run(async (context) => {
             try {
-                const insertType = document.getElementById('insertType').value;
-                console.log('📝 插入类型:', insertType);
                 
                 switch (insertType) {
                     case 'replace':
@@ -678,7 +780,7 @@ async function insertToWord(text) {
                         console.log('📝 执行追加到文档末尾操作');
                         // 追加到文档末尾
                         const body = context.document.body;
-                        body.insertParagraph(text, Word.InsertLocation.end);
+                        body.insertParagraph('\n' + text, Word.InsertLocation.end);
                         break;
                         
                     case 'cursor':
@@ -686,6 +788,25 @@ async function insertToWord(text) {
                         // 在光标位置插入
                         const range = context.document.getSelection();
                         range.insertText(text, Word.InsertLocation.after);
+                        break;
+                        
+                    case 'comment':
+                        console.log('📝 执行生成批注操作');
+                        // 为选中文本添加批注
+                        const selectionForComment = context.document.getSelection();
+                        selectionForComment.load('isEmpty');
+                        await context.sync();
+                        
+                        if (selectionForComment.isEmpty) {
+                            console.log('📝 没有选中文本，将在文档末尾插入批注内容');
+                            // 如果没有选中文本，在文档末尾插入内容
+                            const body = context.document.body;
+                            body.insertParagraph('\n【审批建议】\n' + text, Word.InsertLocation.end);
+                        } else {
+                            console.log('📝 为选中文本添加批注');
+                            // 添加批注
+                            selectionForComment.insertComment(text);
+                        }
                         break;
                         
                     default:
@@ -705,7 +826,8 @@ async function insertToWord(text) {
     });
 }
 
-function handleCopy() {
+// handleCopy函数已移除（copyBtn现在用于开始处理）
+function handleCopy_REMOVED() {
     if (!currentResult) {
         showUserFriendlyMessage('No content to copy');
         return;
@@ -767,7 +889,12 @@ function handleClear() {
     try {
         const resultBox = document.getElementById('resultBox');
         if (resultBox) {
-            resultBox.textContent = 'Click "Start Processing" to get AI response';
+            const resultContent = document.getElementById('resultContent');
+            if (resultContent) {
+                resultContent.textContent = '选择AI工具后点击 "运行" 获取AI响应';
+            } else {
+                resultBox.textContent = '选择AI工具后点击 "运行" 获取AI响应';
+            }
             resultBox.classList.remove('loading');
         }
         console.log('✅ 步骤2：结果框清空完成');
@@ -777,11 +904,11 @@ function handleClear() {
     
     // 步骤3：清空输入框
     try {
-        const conversationInput = document.getElementById('conversationInput');
-        if (conversationInput) {
-            conversationInput.value = '';
+        const customTextarea = document.getElementById('customInputTextarea');
+        if (customTextarea) {
+            customTextarea.value = '';
         }
-        console.log('✅ 步骤3：输入框清空完成');
+        console.log('✅ 步骤3：自定义输入框清空完成');
     } catch (error) {
         console.warn('步骤3失败:', error);
     }
@@ -831,10 +958,52 @@ function handleClear() {
 }
 
 function displayResult(result) {
-    currentResult = result;
-    const resultBox = document.getElementById('resultBox');
-    resultBox.textContent = result;
-    resultBox.classList.remove('loading');
+    try {
+        console.log('📊 开始显示结果，长度:', result ? result.length : 0);
+        
+        currentResult = result;
+        const resultBox = document.getElementById('resultBox');
+        
+        if (!resultBox) {
+            console.error('❌ 未找到resultBox元素');
+            return;
+        }
+        
+        // 清除加载状态
+        resultBox.classList.remove('loading');
+        
+        // 确保结果框有正确的结构
+        let resultContent = document.getElementById('resultContent');
+        if (!resultContent) {
+            resultBox.innerHTML = '<div id="resultContent"></div>';
+            resultContent = document.getElementById('resultContent');
+        }
+        
+        if (resultContent) {
+            resultContent.textContent = result;
+            console.log('✅ 结果已显示在resultContent中');
+        } else {
+            // 降级处理
+            resultBox.innerHTML = `<div id="resultContent">${result}</div>`;
+            console.log('✅ 结果已显示在resultBox中（降级处理）');
+        }
+        
+        // 启用插入按钮
+        const insertBtn = document.getElementById('insertBtn');
+        if (insertBtn) {
+            insertBtn.disabled = false;
+            console.log('✅ 插入按钮已启用');
+        }
+        
+        console.log('📊 结果显示完成');
+        
+    } catch (error) {
+        console.error('❌ 显示结果时出错:', error);
+        console.error('错误堆栈:', error.stack);
+        
+        // 降级处理：直接在控制台显示结果
+        console.log('📊 降级处理 - 结果内容:', result);
+    }
 }
 
 // 帮助函数：创建加载动画HTML
@@ -859,18 +1028,8 @@ function showLoading(message) {
     resultBox.innerHTML = createLoadingHTML(message);
     resultBox.classList.add('loading');
     
-    // 禁用按钮
-    const startBtn = document.getElementById('startBtn');
-    const continueBtn = document.getElementById('continueBtn');
-    
-    if (startBtn) {
-        startBtn.disabled = true;
-        startBtn.style.opacity = '0.6';
-    }
-    if (continueBtn) {
-        continueBtn.disabled = true;
-        continueBtn.style.opacity = '0.6';
-    }
+    // 禁用按钮（startBtn和continueBtn不存在，跳过）
+    console.log('跳过禁用不存在的按钮');
     
     console.log('🔄 显示加载状态:', message);
 }
@@ -879,20 +1038,25 @@ function hideLoading() {
     const resultBox = document.getElementById('resultBox');
     if (resultBox) {
         resultBox.classList.remove('loading');
+        
+        // 如果结果框仍然显示加载动画，清除它
+        if (resultBox.innerHTML.includes('loading-spinner') || resultBox.innerHTML.includes('⏳')) {
+            // 如果有当前结果，显示结果；否则显示默认提示
+            if (currentResult) {
+                displayResult(currentResult);
+            } else {
+                const resultContent = document.getElementById('resultContent');
+                if (resultContent) {
+                    resultContent.textContent = '选择AI工具后点击 "开始处理" 获取Agent响应';
+                } else {
+                    resultBox.innerHTML = '<div id="resultContent">选择AI工具后点击 "开始处理" 获取Agent响应</div>';
+                }
+            }
+        }
     }
     
-    // 启用按钮
-    const startBtn = document.getElementById('startBtn');
-    const continueBtn = document.getElementById('continueBtn');
-    
-    if (startBtn) {
-        startBtn.disabled = false;
-        startBtn.style.opacity = '1';
-    }
-    if (continueBtn) {
-        continueBtn.disabled = false;
-        continueBtn.style.opacity = '1';
-    }
+    // 启用按钮（startBtn和continueBtn不存在，跳过）
+    console.log('跳过启用不存在的按钮');
     
     console.log('✅ 隐藏加载状态');
 }
@@ -968,38 +1132,52 @@ function clearMessages() {
 
 function updateUI() {
     try {
-        // 更新继续对话按钮状态
-        const continueBtn = document.getElementById('continueBtn');
-        if (continueBtn) {
-            continueBtn.disabled = !currentConversationId || conversationHistory.length === 0;
+        // 更新自定义输入框显示
+        if (currentTool === 'custom') {
+            showCustomInput();
+        } else {
+            hideCustomInput();
         }
         
-        // 更新对话输入提示
-        const textarea = document.getElementById('conversationInput');
-        if (textarea) {
-            if (currentTool === 'custom') {
-                if (currentConversationId) {
-                    textarea.placeholder = 'Continue conversation...';
-                } else {
-                    textarea.placeholder = 'Enter your question or instruction...';
-                }
-            } else {
-                textarea.placeholder = `Use "${AI_TOOLS[currentTool].name}" tool to process ${currentContentSource === 'selection' ? 'selected text' : 'entire document'}`;
-            }
-        }
-        
-        // 更新按钮文本
-        const startBtn = document.getElementById('startBtn');
-        if (startBtn) {
-            if (currentConversationId && currentTool === 'custom') {
-                startBtn.innerHTML = '<span>🔄</span><span>Restart</span>';
-            } else {
-                startBtn.innerHTML = '<span>▶️</span><span>Start Processing</span>';
-            }
-        }
+        console.log('UI状态已更新');
     } catch (error) {
         console.warn('更新UI时出错:', error);
     }
+}
+
+// 显示自定义需求输入框
+function showCustomInput() {
+    const container = document.getElementById('customInputContainer');
+    if (container) {
+        container.classList.remove('hidden');
+        
+        // 聚焦到输入框
+        const textarea = document.getElementById('customInputTextarea');
+        if (textarea) {
+            setTimeout(() => {
+                textarea.focus();
+            }, 100);
+        }
+    }
+}
+
+// 隐藏自定义需求输入框
+function hideCustomInput() {
+    const container = document.getElementById('customInputContainer');
+    if (container) {
+        container.classList.add('hidden');
+    }
+}
+
+// 获取用户输入
+function getUserInput() {
+    if (currentTool === 'custom') {
+        const textarea = document.getElementById('customInputTextarea');
+        if (textarea) {
+            return textarea.value.trim();
+        }
+    }
+    return '';
 }
 
 // 调试工具函数 - 在浏览器控制台中可以手动调用
@@ -1020,11 +1198,12 @@ window.debugWordGPT = {
             console.log(`  ${i+1}. ${btn.textContent} - data-source: ${btn.getAttribute('data-source')}`);
         });
         
-        const actionBtns = ['startBtn', 'continueBtn', 'insertBtn', 'copyBtn', 'clearBtn'];
+        const actionBtns = ['copyBtn', 'insertBtn'];
         console.log('操作按钮:');
         actionBtns.forEach(id => {
             const btn = document.getElementById(id);
-            console.log(`  ${id}: ${btn ? '找到' : '未找到'}`);
+            const btnName = id === 'copyBtn' ? '开始处理' : '插入文档';
+            console.log(`  ${id} (${btnName}): ${btn ? '找到' : '未找到'}`);
         });
     },
     
@@ -1060,6 +1239,12 @@ window.debugWordGPT = {
         console.log('对话ID:', currentConversationId);
         console.log('对话历史长度:', conversationHistory.length);
         console.log('当前结果长度:', currentResult.length);
+        
+        // 显示自定义输入状态
+        if (currentTool === 'custom') {
+            const userInput = getUserInput();
+            console.log('自定义需求输入:', userInput || '(空)');
+        }
     },
     
     // 重新初始化
@@ -1082,16 +1267,10 @@ window.debugWordGPT = {
                 console.log('✅ 发现选中文本:', selection.text);
                 console.log('📝 文本长度:', selection.text.length);
                 
-                // 自动选择翻译工具并处理
+                // 自动选择翻译工具（startBtn不存在，无法自动处理）
                 debugWordGPT.selectTool('translate');
                 
-                setTimeout(() => {
-                    console.log('⏰ 2秒后自动点击开始处理...');
-                    const startBtn = document.getElementById('startBtn');
-                    if (startBtn) {
-                        startBtn.click();
-                    }
-                }, 2000);
+                console.log('💡 startBtn不存在，无法自动开始处理');
                 
             } else {
                 console.log('❌ 没有选中文本');
@@ -1166,3 +1345,4 @@ window.addEventListener('unhandledrejection', function(event) {
 
 console.log('调试工具已加载！在控制台输入 debugWordGPT.testButtonBindings() 来测试按钮绑定');
 console.log('已启用全局错误捕获，防止弹窗错误');
+console.log('✅ 已启用防重复执行保护机制');
