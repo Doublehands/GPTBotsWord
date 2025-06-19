@@ -104,7 +104,6 @@ function initializeApp() {
             userId: API_CONFIG.userId
         });
         
-        showSuccessMessage('🎉 GPTBots Copilot就绪！');
         
         // 更新结果框显示
         const resultBox = document.getElementById('resultBox');
