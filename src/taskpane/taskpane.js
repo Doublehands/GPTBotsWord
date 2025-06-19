@@ -61,7 +61,7 @@ function initializeApp() {
         return;
     }
     
-    console.log('开始初始化 GPTBots copilot ...');
+    console.log('开始初始化 GPTBots Copilot ...');
     
     try {
         // 检查API配置是否已加载
@@ -96,7 +96,7 @@ function initializeApp() {
         updateUI();
         
         // 显示API配置信息
-        console.log('GPTBots copilot 已初始化');
+        console.log('GPTBots Copilot 已初始化');
         console.log('API配置:', {
             baseUrl: API_CONFIG.baseUrl,
             createConversationUrl: getCreateConversationUrl(),
@@ -104,16 +104,16 @@ function initializeApp() {
             userId: API_CONFIG.userId
         });
         
-        showSuccessMessage('🎉 GPTBots copilot已经准备就绪！');
+        showSuccessMessage('🎉 GPTBots Copilot就绪！');
         
         // 更新结果框显示
         const resultBox = document.getElementById('resultBox');
         if (resultBox) {
             const resultContent = document.getElementById('resultContent');
             if (resultContent) {
-                resultContent.textContent = '选择AI工具后点击 "开始处理" 获取Agent响应';
+                resultContent.textContent = '点击 "开始处理" ';
             } else {
-                resultBox.textContent = '选择AI工具后点击 "开始处理" 获取Agent响应';
+                resultBox.textContent = '点击 "开始处理" ';
             }
             resultBox.classList.remove('loading');
         }
@@ -131,7 +131,7 @@ function initializeApp() {
             insertBtn.disabled = true; // 初始禁用插入按钮
         }
         
-        console.log('GPTBots copilot 初始化完成！');
+        console.log('GPTBots Copilot 初始化完成！');
         
         // 标记为已初始化
         isInitialized = true;
@@ -152,13 +152,13 @@ function initializeApp() {
         if (resultBox) {
             resultBox.innerHTML = `
                 <div style="text-align: center; color: #f59e0b; font-weight: 500;">
-                    ⚡ GPTBots copilot is starting...
+                    ⚡ GPTBots Copilot初始化中...
                 </div>
             `;
         }
         
         // 显示友好的提示而不是技术错误
-        showUserFriendlyMessage('Plugin is initializing, please wait...');
+        showUserFriendlyMessage('GPTBots Copilot初始化中，请稍后...');
     }
 }
 
@@ -279,10 +279,6 @@ function handleToolSelection(event) {
             console.log('隐藏自定义需求输入框');
         }
         
-        // 如果是审批建议，显示特殊提示
-        if (currentTool === 'academic') {
-            showUserFriendlyMessage('审批建议功能将自动为选中文本添加批注，如果没有选中文本则在文档末尾插入建议内容');
-        }
         
         // 更新UI状态
         updateUI();
