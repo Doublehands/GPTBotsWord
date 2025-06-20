@@ -3,6 +3,8 @@
 Word add-ins are integrations built by third parties into Word by using [Word JavaScript API](https://learn.microsoft.com/en-us/office/dev/add-ins/reference/overview/word-add-ins-reference-overview) and [Office Platform capabilities](https://learn.microsoft.com/en-us/office/dev/add-ins/overview/office-add-ins).
 
 ## How to run this project
+node local-server.js
+npm start
 
 ### Prerequisites
 
