@@ -21,24 +21,24 @@ let isInitialized = false; // 防止重复初始化
 const AI_TOOLS = {
     translate: {
         name: '翻译',
-        prompt: 'NO.001\n\n{content}'
+        prompt: 'NO.001: {content}'
     },
     polish: {
         name: '润色',
-        prompt: 'NO.002：\n\n{content}'
+        prompt: 'NO.002: {content}'
     },
     academic: {
         name: '审批建议',
-        prompt: 'NO.003：\n\n{content}'
+        prompt: 'NO.003: {content}'
     },
     summary: {
         name: '总结',
-        prompt: 'NO.004：\n\n{content}'
+        prompt: 'NO.004: {content}'
     },
 
     custom: {
         name: '自定义需求',
-        prompt: '{userInput}\n\n内容：\n{content}'
+        prompt: 'NO.005: {userInput}：内容：{content}'
     }
 };
 
@@ -398,7 +398,19 @@ async function handleStart() {
         }
         
         // 第四步：构建提示词
-        const prompt = buildPrompt(content, userInput);
+        // 特殊处理：审批建议功能根据内容源选择不同的工具
+        let actualTool = currentTool;
+        if (currentTool === 'academic') {
+            if (currentContentSource === 'selection') {
+                actualTool = 'academic'; // 选中文本使用academic
+                console.log('📋 审批建议 - 选中文本，使用academic工具');
+            } else {
+                actualTool = 'summary'; // 整个文档使用summary
+                console.log('📋 审批建议 - 整个文档，使用summary工具');
+            }
+        }
+        
+        const prompt = buildPromptWithTool(content, userInput, actualTool);
         console.log('📋 构建的提示词:', prompt);
         
         showLoading('🤖 AI正在处理中...');
@@ -544,7 +556,16 @@ async function getWordContent() {
 }
 
 function buildPrompt(content, userInput) {
-    const tool = AI_TOOLS[currentTool];
+    return buildPromptWithTool(content, userInput, currentTool);
+}
+
+function buildPromptWithTool(content, userInput, toolName) {
+    const tool = AI_TOOLS[toolName];
+    
+    if (!tool) {
+        console.error('未找到工具:', toolName);
+        return content; // 如果工具不存在，返回原始内容
+    }
     
     let prompt = tool.prompt;
     
