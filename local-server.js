@@ -4,7 +4,7 @@ const url = require('url');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 8080;
+const PORT = 8081;
 
 // 代理API请求
 function proxyApiRequest(req, res, apiPath) {
@@ -29,7 +29,7 @@ function proxyApiRequest(req, res, apiPath) {
             }
         };
         
-        console.log(`📡 代理请求: ${req.method} ${apiPath}`);
+        console.log(`代理请求: ${req.method} ${apiPath}`);
         console.log('请求体:', body);
         
         const proxyReq = https.request(options, (proxyRes) => {
@@ -40,7 +40,7 @@ function proxyApiRequest(req, res, apiPath) {
             });
             
             proxyRes.on('end', () => {
-                console.log(`📥 API响应 [${proxyRes.statusCode}]:`, responseData);
+                console.log(`API响应 [${proxyRes.statusCode}]:`, responseData);
                 
                 // 设置CORS头
                 res.setHeader('Access-Control-Allow-Origin', '*');
@@ -54,7 +54,7 @@ function proxyApiRequest(req, res, apiPath) {
         });
         
         proxyReq.on('error', (error) => {
-            console.error('❌ 代理请求失败:', error.message);
+            console.error('代理请求失败:', error.message);
             res.setHeader('Access-Control-Allow-Origin', '*');
             res.statusCode = 500;
             res.end(JSON.stringify({ error: error.message }));
@@ -70,7 +70,7 @@ const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const pathname = parsedUrl.pathname;
     
-    console.log(`📍 请求: ${req.method} ${pathname}`);
+    console.log(`请求: ${req.method} ${pathname}`);
     
     // 处理OPTIONS预检请求
     if (req.method === 'OPTIONS') {
@@ -113,19 +113,19 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-    console.log('🚀 本地服务器已启动');
-    console.log(`📍 服务器地址: http://localhost:${PORT}`);
-    console.log(`🔧 调试页面: http://localhost:${PORT}/debug-api.html`);
-    console.log('📡 API代理路径:');
-    console.log('   - 创建对话: http://localhost:8080/api/v1/conversation');
-    console.log('   - 发送消息: http://localhost:8080/api/v2/conversation/message');
+    console.log('本地服务器已启动');
+    console.log(`服务器地址: http://localhost:${PORT}`);
+    console.log(`调试页面: http://localhost:${PORT}/debug-api.html`);
+    console.log('API代理路径:');
+    console.log('   - 创建对话: http://localhost:8081/api/v1/conversation');
+    console.log('   - 发送消息: http://localhost:8081/api/v2/conversation/message');
     console.log('');
-    console.log('💡 现在可以在浏览器中测试API了！');
+    console.log('现在可以在浏览器中测试API了！');
     console.log('按 Ctrl+C 停止服务器');
 });
 
 server.on('error', (error) => {
-    console.error('❌ 服务器启动失败:', error.message);
+    console.error('服务器启动失败:', error.message);
     if (error.code === 'EADDRINUSE') {
         console.log(`端口 ${PORT} 已被占用，请关闭其他应用或换一个端口`);
     }

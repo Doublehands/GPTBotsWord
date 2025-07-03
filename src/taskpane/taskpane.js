@@ -6,22 +6,234 @@
 /* global document, Office, Word */
 
 // 应用状态
-let currentTool = 'custom';
+let currentTool = null;
 let currentContentSource = 'selection';
 let currentInsertPosition = 'replace'; // 当前选中的插入位置
 let currentResult = '';
 let conversationHistory = [];
 let currentConversationId = null; // GPTBots对话ID
 let isInitialized = false; // 防止重复初始化
+let currentLanguage = 'zh-cn'; // 当前选择的语言
+let selectedTranslateLanguage = null; // 选择的翻译目标语言
+
 
 // 引入API配置
 // 注意：在HTML文件中需要先引入 api-config.js
+
+// 多语言配置
+const LANGUAGE_TEXTS = {
+    'zh-cn': {
+        languageSettings: '🌐 语言设置',
+        skills: 'Agent 技能',
+        targetContent: '目标内容',
+        resultPreview: '结果预览',
+        insertPosition: '生成位置',
+        'btn.translate': '深度翻译',
+        'btn.polish': '内容润色',
+        'btn.academic': '审批建议',
+        'btn.summary': '总结摘要',
+        'btn.grammar': '语法修正',
+        'btn.enterprise': '企业数据',
+        'btn.selection': '选中文本',
+        'btn.document': '整个文档',
+        'btn.start': '开始处理',
+        'btn.insert': '插入文档',
+        'btn.replace': '替换选中文本',
+        'btn.append': '添加至末尾',
+        'btn.cursor': '光标位置插入',
+        'btn.comment': '生成批注',
+        'placeholder.custom': 'GPTBots会根据你的需求生成内容...',
+        'translate.selectLanguage': '选择翻译目标语言',
+        'lang.english': 'English',
+        'lang.chinese': '中文',
+        'lang.japanese': '日本語',
+        'lang.korean': '한국어',
+        'lang.thai': 'ไทย',
+        'lang.french': 'Français',
+        'lang.german': 'Deutsch',
+        'lang.spanish': 'Español',
+        'lang.traditional': '繁體中文',
+        'translate.to': '翻译成',
+        'apiKey.title': 'GPTBots API Key',
+        'apiKey.placeholder': 'app-xxxxxxxxxxxxxxxxxxxxxxx',
+
+        'enterprise.inputLabel': '请描述您需要的企业数据',
+        'enterprise.inputPlaceholder': '例如：上季度销售数据、去年财务报表、客户满意度调研等...',
+        'custom.inputLabel': '请描述您的具体需求',
+        'custom.inputPlaceholder': '例如：总结要点、修正语法错误、特定格式要求等...',
+        'btn.back': '返回'
+    },
+    'en': {
+        languageSettings: '🌐 Language Settings',
+        skills: 'Agent Skills',
+        targetContent: 'Target Content',
+        resultPreview: 'Result Preview',
+        insertPosition: 'Insert Position',
+        'btn.translate': 'Deep Translation',
+        'btn.polish': 'Content Polish',
+        'btn.academic': 'Review Suggestions',
+        'btn.summary': 'Summary',
+        'btn.grammar': 'Grammar Fix',
+        'btn.enterprise': 'Enterprise Data',
+        'btn.selection': 'Selected Text',
+        'btn.document': 'Entire Document',
+        'btn.start': 'Start Processing',
+        'btn.insert': 'Insert to Document',
+        'btn.replace': 'Replace Selected Text',
+        'btn.append': 'Append to End',
+        'btn.cursor': 'Insert at Cursor',
+        'btn.comment': 'Add Comment',
+        'placeholder.custom': 'GPTBots will generate content based on your requirements...',
+        'translate.selectLanguage': 'Select Target Language',
+        'lang.english': 'English',
+        'lang.chinese': '中文',
+        'lang.japanese': '日本語',
+        'lang.korean': '한국어',
+        'lang.thai': 'ไทย',
+        'lang.french': 'Français',
+        'lang.german': 'Deutsch',
+        'lang.spanish': 'Español',
+        'lang.traditional': '繁體中文',
+        'translate.to': 'Translate to',
+        'apiKey.title': 'GPTBots API Key',
+        'apiKey.placeholder': 'app-xxxxxxxxxxxxxxxxxxxxxxx',
+
+        'enterprise.inputLabel': 'Please describe the enterprise data you need',
+        'enterprise.inputPlaceholder': 'e.g.: Last quarter sales data, annual financial reports, customer satisfaction surveys...',
+        'custom.inputLabel': 'Please describe your specific requirements',
+        'custom.inputPlaceholder': 'e.g.: Summarize key points, fix grammar errors, specific format requirements...',
+        'btn.back': 'Back'
+    },
+    'th': {
+        languageSettings: '🌐 การตั้งค่าภาษา',
+        skills: 'ทักษะ Agent',
+        targetContent: 'เนื้อหาเป้าหมาย',
+        resultPreview: 'ตัวอย่างผลลัพธ์',
+        insertPosition: 'ตำแหน่งการแทรก',
+        'btn.translate': 'การแปลเชิงลึก',
+        'btn.polish': 'ปรับปรุงเนื้อหา',
+        'btn.academic': 'ข้อเสนอแนะการอนุมัติ',
+        'btn.summary': 'สรุปย่อ',
+        'btn.grammar': 'แก้ไขไวยากรณ์',
+        'btn.enterprise': 'ข้อมูลองค์กร',
+        'btn.selection': 'ข้อความที่เลือก',
+        'btn.document': 'เอกสารทั้งหมด',
+        'btn.start': 'เริ่มประมวลผล',
+        'btn.insert': 'แทรกในเอกสาร',
+        'btn.replace': 'แทนที่ข้อความที่เลือก',
+        'btn.append': 'เพิ่มที่ท้าย',
+        'btn.cursor': 'แทรกที่เคอร์เซอร์',
+        'btn.comment': 'เพิ่มความคิดเห็น',
+        'placeholder.custom': 'GPTBots จะสร้างเนื้อหาตามความต้องการของคุณ...',
+        'translate.selectLanguage': 'เลือกภาษาเป้าหมาย',
+        'lang.english': 'English',
+        'lang.chinese': '中文',
+        'lang.japanese': '日本語',
+        'lang.korean': '한국어',
+        'lang.thai': 'ไทย',
+        'lang.french': 'Français',
+        'lang.german': 'Deutsch',
+        'lang.spanish': 'Español',
+        'lang.traditional': '繁體中文',
+        'translate.to': 'แปลเป็น',
+        'apiKey.title': 'GPTBots API Key',
+        'apiKey.placeholder': 'app-xxxxxxxxxxxxxxxxxxxxxxx',
+
+        'enterprise.inputLabel': 'โปรดอธิบายข้อมูลองค์กรที่คุณต้องการ',
+        'enterprise.inputPlaceholder': 'เช่น: ข้อมูลการขายไตรมาสที่แล้ว รายงานการเงินประจำปี การสำรวจความพึงพอใจของลูกค้า...',
+        'custom.inputLabel': 'โปรดอธิบายความต้องการเฉพาะของคุณ',
+        'custom.inputPlaceholder': 'เช่น: สรุปประเด็นสำคัญ แก้ไขข้อผิดพลาดทางไวยากรณ์ ข้อกำหนดรูปแบบเฉพาะ...',
+        'btn.back': 'กลับ'
+    },
+    'ja': {
+        languageSettings: '🌐 言語設定',
+        skills: 'Agent スキル',
+        targetContent: '対象コンテンツ',
+        resultPreview: '結果プレビュー',
+        insertPosition: '挿入位置',
+        'btn.translate': '深度翻訳',
+        'btn.polish': 'コンテンツ校正',
+        'btn.academic': '承認提案',
+        'btn.summary': '要約',
+        'btn.grammar': '文法修正',
+        'btn.enterprise': '企業データ',
+        'btn.selection': '選択テキスト',
+        'btn.document': '文書全体',
+        'btn.start': '処理開始',
+        'btn.insert': '文書に挿入',
+        'btn.replace': '選択テキストを置換',
+        'btn.append': '末尾に追加',
+        'btn.cursor': 'カーソル位置に挿入',
+        'btn.comment': 'コメント追加',
+        'placeholder.custom': 'GPTBotsがあなたの要件に基づいてコンテンツを生成します...',
+        'translate.selectLanguage': '翻訳先言語を選択',
+        'lang.english': 'English',
+        'lang.chinese': '中文',
+        'lang.japanese': '日本語',
+        'lang.korean': '한국어',
+        'lang.thai': 'ไทย',
+        'lang.french': 'Français',
+        'lang.german': 'Deutsch',
+        'lang.spanish': 'Español',
+        'lang.traditional': '繁體中文',
+        'translate.to': '翻訳先：',
+        'apiKey.title': 'GPTBots API Key',
+        'apiKey.placeholder': 'app-xxxxxxxxxxxxxxxxxxxxxxx',
+
+        'enterprise.inputLabel': '必要な企業データを説明してください',
+        'enterprise.inputPlaceholder': '例：前四半期の売上データ、年次財務報告書、顧客満足度調査など...',
+        'custom.inputLabel': '具体的な要件を説明してください',
+        'custom.inputPlaceholder': '例：要点をまとめる、文法エラーを修正する、特定の形式要件など...',
+        'btn.back': '戻る'
+    },
+    'zh-tw': {
+        languageSettings: '🌐 語言設置',
+        skills: 'Agent 技能',
+        targetContent: '目標內容',
+        resultPreview: '結果預覽',
+        insertPosition: '生成位置',
+        'btn.translate': '深度翻譯',
+        'btn.polish': '內容潤色',
+        'btn.academic': '審批建議',
+        'btn.summary': '總結摘要',
+        'btn.grammar': '語法修正',
+        'btn.enterprise': '企業數據',
+        'btn.selection': '選中文字',
+        'btn.document': '整個文件',
+        'btn.start': '開始處理',
+        'btn.insert': '插入文件',
+        'btn.replace': '替換選中文字',
+        'btn.append': '添加至末尾',
+        'btn.cursor': '游標位置插入',
+        'btn.comment': '生成批註',
+        'placeholder.custom': 'GPTBots會根據你的需求生成內容...',
+        'translate.selectLanguage': '選擇翻譯目標語言',
+        'lang.english': 'English',
+        'lang.chinese': '中文',
+        'lang.japanese': '日本語',
+        'lang.korean': '한국어',
+        'lang.thai': 'ไทย',
+        'lang.french': 'Français',
+        'lang.german': 'Deutsch',
+        'lang.spanish': 'Español',
+        'lang.traditional': '繁體中文',
+        'translate.to': '翻譯成',
+        'apiKey.title': 'GPTBots API Key',
+        'apiKey.placeholder': 'app-xxxxxxxxxxxxxxxxxxxxxxx',
+
+        'enterprise.inputLabel': '請描述您需要的企業數據',
+        'enterprise.inputPlaceholder': '例如：上季度銷售數據、去年財務報表、客戶滿意度調研等...',
+        'custom.inputLabel': '請描述您的具體需求',
+        'custom.inputPlaceholder': '例如：總結要點、修正語法錯誤、特定格式要求等...',
+        'btn.back': '返回'
+    }
+};
 
 // Predefined AI tool prompts
 const AI_TOOLS = {
     translate: {
         name: '翻译',
-        prompt: 'NO.001: {content}'
+        prompt: 'NO.001: 请翻译为{targetLanguage}：{content}'
     },
     polish: {
         name: '润色',
@@ -31,14 +243,24 @@ const AI_TOOLS = {
         name: '审批建议',
         prompt: 'NO.003: {content}'
     },
+    academicDocument: {
+        name: '审批建议（整个文档）',
+        prompt: 'NO.010: {content}'
+    },
     summary: {
         name: '总结',
-        prompt: 'NO.004: {content}'
+        prompt: 'NO.004: {userInput}：内容：{content}',
+        needsInput: true
     },
-
-    custom: {
-        name: '自定义需求',
-        prompt: 'NO.005: {userInput}：内容：{content}'
+    grammar: {
+        name: '修改语法',
+        prompt: 'NO.005: {userInput}：内容：{content}',
+        needsInput: true
+    },
+    enterprise: {
+        name: '企业数据',
+        prompt: 'NO.006: {userInput}：内容：{content}',
+        needsInput: true
     }
 };
 
@@ -110,19 +332,16 @@ function initializeApp() {
         if (resultBox) {
             const resultContent = document.getElementById('resultContent');
             if (resultContent) {
-                resultContent.textContent = '点击 "开始处理" ';
+                resultContent.textContent = 'GPTBots Copilot ';
             } else {
-                resultBox.textContent = '点击 "开始处理" ';
+                resultBox.textContent = 'GPTBots Copilot';
             }
             resultBox.classList.remove('loading');
         }
         
-        // 初始化自定义输入框显示状态（默认选中custom）
-        if (currentTool === 'custom') {
-            showCustomInput();
-        } else {
-            hideCustomInput();
-        }
+        // 初始化时隐藏输入框
+        hideCustomInput();
+        hideEnterpriseInput();
         
         // 初始化按钮状态
         const insertBtn = document.getElementById('insertBtn');
@@ -134,6 +353,14 @@ function initializeApp() {
         
         // 标记为已初始化
         isInitialized = true;
+        
+        // 初始化语言显示
+        updateLanguageDisplay();
+        
+        // 初始化API Key掩码
+        setTimeout(() => {
+            maskApiKey();
+        }, 100);
         
     } catch (error) {
         console.error('初始化失败:', error);
@@ -247,6 +474,133 @@ function bindEventListeners() {
     // clearBtn 已移除（HTML中不存在）
     console.log('  - 清空按钮不存在，已跳过绑定');
     
+    // 地球图标语言选择器
+    const languageGlobeBtn = document.getElementById('languageGlobeBtn');
+    const languageDropdown = document.getElementById('languageDropdown');
+    
+    if (languageGlobeBtn && languageDropdown) {
+        // 清除可能存在的旧事件监听器
+        const newLanguageGlobeBtn = languageGlobeBtn.cloneNode(true);
+        languageGlobeBtn.parentNode.replaceChild(newLanguageGlobeBtn, languageGlobeBtn);
+        
+        // 重新获取元素引用
+        const currentLanguageGlobeBtn = document.getElementById('languageGlobeBtn');
+        const currentLanguageDropdown = document.getElementById('languageDropdown');
+        
+        // 点击地球图标显示/隐藏下拉框
+        currentLanguageGlobeBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            currentLanguageDropdown.classList.toggle('active');
+            console.log('语言下拉框状态切换');
+        });
+        
+        // 点击语言选项
+        const languageOptions = currentLanguageDropdown.querySelectorAll('.language-option');
+        languageOptions.forEach(option => {
+            // 清除可能存在的旧事件监听器
+            const newOption = option.cloneNode(true);
+            option.parentNode.replaceChild(newOption, option);
+            
+            newOption.addEventListener('click', (event) => {
+                const selectedLang = event.target.getAttribute('data-lang');
+                console.log('语言选择改变:', selectedLang);
+                handleLanguageChange(selectedLang);
+                currentLanguageDropdown.classList.remove('active');
+            });
+        });
+        
+        console.log('  - 地球图标语言选择器已绑定');
+    }
+    
+    // 设置按钮
+    const settingsBtn = document.getElementById('settingsBtn');
+    const apiKeySection = document.getElementById('apiKeySection');
+    
+    if (settingsBtn && apiKeySection) {
+        // 清除可能存在的旧事件监听器
+        const newSettingsBtn = settingsBtn.cloneNode(true);
+        settingsBtn.parentNode.replaceChild(newSettingsBtn, settingsBtn);
+        
+        // 重新获取元素引用
+        const currentSettingsBtn = document.getElementById('settingsBtn');
+        
+        currentSettingsBtn.addEventListener('click', () => {
+            const isVisible = apiKeySection.style.display !== 'none';
+            apiKeySection.style.display = isVisible ? 'none' : 'block';
+            currentSettingsBtn.classList.toggle('active', !isVisible);
+            console.log('API Key设置区域状态切换:', !isVisible);
+        });
+        console.log('  - 设置按钮已绑定');
+    }
+    
+    // 点击其他地方关闭语言下拉框
+    document.addEventListener('click', (event) => {
+        const currentLanguageDropdown = document.getElementById('languageDropdown');
+        const currentLanguageGlobeBtn = document.getElementById('languageGlobeBtn');
+        
+        if (currentLanguageDropdown && !currentLanguageDropdown.contains(event.target) && event.target !== currentLanguageGlobeBtn) {
+            currentLanguageDropdown.classList.remove('active');
+        }
+    });
+    
+    // 翻译模态框事件
+    const translateModalClose = document.getElementById('translateModalClose');
+    if (translateModalClose) {
+        translateModalClose.addEventListener('click', () => {
+            hideTranslateModal();
+        });
+        console.log('  - 翻译模态框关闭按钮已绑定');
+    }
+    
+    // 翻译语言按钮
+    const translateLangBtns = document.querySelectorAll('.translate-lang-btn');
+    translateLangBtns.forEach(btn => {
+        btn.addEventListener('click', (event) => {
+            const targetLang = event.target.getAttribute('data-target-lang');
+            handleTranslateLanguageSelection(targetLang);
+        });
+    });
+    console.log(`  - ${translateLangBtns.length} 个翻译语言按钮已绑定`);
+    
+    // 点击模态框背景关闭
+    const translateModal = document.getElementById('translateModal');
+    if (translateModal) {
+        translateModal.addEventListener('click', (event) => {
+            if (event.target === translateModal) {
+                hideTranslateModal();
+            }
+        });
+        console.log('  - 翻译模态框背景点击已绑定');
+    }
+    
+
+    
+    // API Key toggle按钮已删除，无需绑定
+    
+    // API Key输入框焦点事件
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    if (apiKeyInput) {
+        apiKeyInput.addEventListener('focus', () => {
+            unmaskApiKey();
+        });
+        
+        apiKeyInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                maskApiKey();
+            }, 100);
+        });
+        console.log('  - API Key输入框焦点事件已绑定');
+    }
+    
+    // 返回按钮
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            showMainInterface();
+        });
+        console.log('  - 返回按钮已绑定');
+    }
+    
     console.log('事件监听器绑定完成！');
 }
 
@@ -256,28 +610,64 @@ function handleToolSelection(event) {
     console.log('元素内容:', event.target.textContent);
     
     try {
+        const newTool = event.target.getAttribute('data-tool');
+        console.log('选择的工具:', newTool);
+        console.log('之前的工具:', currentTool);
+        
+        // 如果是翻译工具，显示语言选择模态框
+        if (newTool === 'translate') {
+            showTranslateModal();
+            return; // 不直接设置工具，等用户选择目标语言后再设置
+        }
+        
+        // 检查工具是否需要用户输入
+        const toolConfig = AI_TOOLS[newTool];
+        if (toolConfig && toolConfig.needsInput) {
+            // 直接设置工具并显示相应的输入框
+            currentTool = newTool;
+            
+            // 更新选中状态
+            document.querySelectorAll('.ai-tool-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            
+            // 根据工具类型显示相应的输入框
+            if (newTool === 'enterprise') {
+                showEnterpriseInput();
+            } else {
+                showCustomInput();
+            }
+            
+            updateUI();
+            return;
+        }
+        
         // 更新选中状态
         document.querySelectorAll('.ai-tool-btn').forEach(btn => {
             btn.classList.remove('selected');
         });
         event.target.classList.add('selected');
         
-        // 更新当前工具
-        const newTool = event.target.getAttribute('data-tool');
-        console.log('选择的工具:', newTool);
-        console.log('之前的工具:', currentTool);
-        
-        currentTool = newTool;
-        
-        // 如果是自定义工具，显示输入框
-        if (currentTool === 'custom') {
-            showCustomInput();
-            console.log('显示自定义需求输入框');
-        } else {
-            hideCustomInput();
-            console.log('隐藏自定义需求输入框');
+        // 如果不是翻译工具，重置翻译按钮文本并清除选择的翻译语言
+        if (newTool !== 'translate') {
+            selectedTranslateLanguage = null;
+            resetTranslateButtonText();
         }
         
+        // 清理之前工具的状态
+        if (newTool !== 'enterprise') {
+            resetEnterpriseButtonText();
+            hideEnterpriseInput();
+        }
+        
+        // 隐藏自定义输入框（如果当前工具不需要输入）
+        const newToolConfig = AI_TOOLS[newTool];
+        if (!newToolConfig || !newToolConfig.needsInput || newTool === 'enterprise') {
+            hideCustomInput();
+        }
+        
+        currentTool = newTool;
         
         // 更新UI状态
         updateUI();
@@ -349,7 +739,7 @@ function handleInsertPositionSelection(event) {
 
 // 开始处理功能（现在使用copyBtn按钮）
 async function handleStart() {
-    console.log('🚀 开始处理按钮被点击！');
+            console.log('开始处理按钮被点击！');
     console.log('当前工具:', currentTool);
     console.log('当前内容源:', currentContentSource);
     
@@ -366,16 +756,31 @@ async function handleStart() {
         if (startBtn) {
             startBtn.disabled = true;
             startBtn.classList.add('loading');
-            startBtn.innerHTML = '<span>⏳</span><span>处理中...</span>';
+            const processingText = getProcessingText();
+            startBtn.innerHTML = `<span>⏳</span><span>${processingText}</span>`;
         }
         
         // 清除之前的消息
         clearMessages();
         
-        // 第一步：显示开始状态
+        // 第一步：验证是否选择了技能
+        if (!currentTool) {
+            throw new Error('请先选择一个技能');
+        }
+        
+        // 第二步：验证API Key
+        const apiKeyValidation = validateApiKey();
+        if (!apiKeyValidation.valid) {
+            // 验证失败时不跳转，直接抛出错误
+            throw new Error(apiKeyValidation.message);
+        }
+        console.log('✅ API Key验证通过');
+        
+        // 第三步：立即跳转到结果界面并显示开始状态
+        showResultInterface();
         showLoading('📋 正在获取Word内容...');
         
-        // 第二步：获取Word内容
+        // 第四步：获取Word内容
         console.log('📋 正在获取Word内容...');
         const content = await getWordContent();
         console.log('📋 获取到的内容:', content);
@@ -386,36 +791,38 @@ async function handleStart() {
         }
         
         // 在控制台显示技术信息
-        console.log(`📊 成功获取${currentContentSource === 'selection' ? '选中文本' : '文档内容'}: ${content.length} 个字符`);
+        console.log(`成功获取${currentContentSource === 'selection' ? '选中文本' : '文档内容'}: ${content.length} 个字符`);
         
-        // 第三步：获取用户输入
+        // 第五步：获取用户输入
         const userInput = getUserInput();
         console.log('📋 用户输入:', userInput);
         
-        // 如果是自定义工具但没有输入，提示用户
-        if (currentTool === 'custom' && !userInput) {
-            throw new Error('请在输入框中描述你的需求');
+        // 如果是翻译工具但没有选择目标语言，提示用户
+        if (currentTool === 'translate' && !selectedTranslateLanguage) {
+            throw new Error('请先选择翻译目标语言');
         }
         
-        // 第四步：构建提示词
+
+        
+        // 第六步：构建提示词
         // 特殊处理：审批建议功能根据内容源选择不同的工具
         let actualTool = currentTool;
         if (currentTool === 'academic') {
             if (currentContentSource === 'selection') {
-                actualTool = 'academic'; // 选中文本使用academic
-                console.log('📋 审批建议 - 选中文本，使用academic工具');
+                actualTool = 'academic'; // 选中文本使用academic (NO.003)
+                console.log('📋 审批建议 - 选中文本，使用academic工具 (NO.003)');
             } else {
-                actualTool = 'summary'; // 整个文档使用summary
-                console.log('📋 审批建议 - 整个文档，使用summary工具');
+                actualTool = 'academicDocument'; // 整个文档使用academicDocument (NO.010)
+                console.log('📋 审批建议 - 整个文档，使用academicDocument工具 (NO.010)');
             }
         }
         
         const prompt = buildPromptWithTool(content, userInput, actualTool);
         console.log('📋 构建的提示词:', prompt);
         
-        showLoading('🤖 AI正在处理中...');
+                        showLoading('AI正在处理中...');
         
-        // 第五步：调用API
+        // 第七步：调用API
         console.log('📋 开始调用API...');
         const response = await callConversationAPI(prompt, true); // true表示新对话
         console.log('📋 API响应:', response);
@@ -426,23 +833,21 @@ async function handleStart() {
         
         showLoading('✨ 正在准备结果...');
         
-        // 第六步：显示结果
-        console.log('📊 开始显示AI响应结果...');
+        // 第八步：显示结果
+        console.log('开始显示AI响应结果...');
         try {
             displayResult(response);
-            console.log(`📊 AI处理完成，生成结果: ${response.length} 个字符`);
+            console.log(`AI处理完成，生成结果: ${response.length} 个字符`);
+            
+            // 处理完成后跳转到结果界面
+            showResultInterface();
         } catch (displayError) {
             console.error('❌ 显示结果时出错:', displayError);
             // 即使显示失败，也要保存结果
             currentResult = response;
         }
         
-        // 向用户显示友好信息
-        try {
-            showSuccessMessage(`处理完成！点击 "插入文档" 将结果添加到Word中。`);
-        } catch (msgError) {
-            console.error('❌ 显示成功消息时出错:', msgError);
-        }
+
         
         // 启用插入按钮
         try {
@@ -468,6 +873,11 @@ async function handleStart() {
         console.log('- 错误详情:', error.message);
         console.log('- 错误堆栈:', error.stack);
         
+        // 如果是API Key验证失败或其他早期错误，返回主界面
+        if (error.message.includes('API Key') || error.message.includes('请先选择') || error.message.includes('请先在')) {
+            showMainInterface();
+        }
+        
         // 显示友好的错误提示
         showUserFriendlyMessage(error.message);
         
@@ -485,7 +895,8 @@ async function handleStart() {
         if (startBtn) {
             startBtn.disabled = false;
             startBtn.classList.remove('loading');
-            startBtn.innerHTML = '<span>🚀</span><span>开始处理</span>';
+            const startText = LANGUAGE_TEXTS[currentLanguage]['btn.start'] || '开始处理';
+                            startBtn.innerHTML = `<span>${startText}</span>`;
         }
         hideLoading();
     }
@@ -571,10 +982,33 @@ function buildPromptWithTool(content, userInput, toolName) {
     
     // 替换模板变量
     prompt = prompt.replace('{content}', content);
-    prompt = prompt.replace('{userInput}', userInput || '');
     
-    // 使用默认语言（中文）替换语言占位符
-    prompt = prompt.replace('{language}', '中文');
+    // 为需要用户输入的工具提供默认值
+    let finalUserInput = userInput || '';
+    if (tool.needsInput && !finalUserInput) {
+        // 根据工具类型提供默认的用户输入
+        const defaultInputs = {
+            'summary': '请总结以下内容的要点',
+            'grammar': '请修正以下内容的语法和表达',
+            'enterprise': '请分析以下内容'
+        };
+        finalUserInput = defaultInputs[toolName] || '请处理以下内容';
+    }
+    
+    prompt = prompt.replace('{userInput}', finalUserInput);
+    
+    // 使用当前选择的语言替换语言占位符
+    const currentLanguageName = getLanguageNameForPrompt(currentLanguage);
+    prompt = prompt.replace('{language}', currentLanguageName);
+    
+    // 如果是翻译工具，处理目标语言
+    if (toolName === 'translate' && selectedTranslateLanguage) {
+        const targetLanguageName = getTargetLanguageName(selectedTranslateLanguage);
+        prompt = prompt.replace('{targetLanguage}', targetLanguageName);
+        console.log('翻译目标语言:', targetLanguageName);
+    }
+    
+    console.log('构建的提示词 (界面语言: ' + currentLanguage + ', 翻译目标: ' + (selectedTranslateLanguage || 'N/A') + '):', prompt);
     
     return prompt;
 }
@@ -710,8 +1144,8 @@ async function callConversationAPI(prompt, isNewConversation = true) {
 }
 
 async function handleInsert() {
-    console.log('📝 插入按钮被点击');
-    console.log('📝 当前结果长度:', currentResult ? currentResult.length : 0);
+            console.log('插入按钮被点击');
+            console.log('当前结果长度:', currentResult ? currentResult.length : 0);
     
     if (!currentResult) {
         showUserFriendlyMessage('没有内容可插入，请先点击"开始处理"');
@@ -739,12 +1173,12 @@ async function handleInsert() {
         // 如果是审批建议功能，强制使用批注模式
         if (currentTool === 'academic') {
             insertType = 'comment';
-            console.log('📝 审批建议功能：强制使用批注模式');
+            console.log('审批建议功能：强制使用批注模式');
         }
         
-        console.log('📝 插入类型:', insertType);
+        console.log('插入类型:', insertType);
         
-        showLoading('📝 正在将内容插入Word文档...');
+                    showLoading('正在将内容插入Word文档...');
         
         await insertToWordWithType(currentResult, insertType);
         
@@ -769,16 +1203,16 @@ async function handleInsert() {
         if (insertBtn) {
             insertBtn.disabled = false;
             insertBtn.classList.remove('loading');
-            insertBtn.innerHTML = '<span>📝</span><span>插入文档</span>';
+            insertBtn.innerHTML = '<span>插入文档</span>';
         }
         hideLoading();
     }
 }
 
 async function insertToWordWithType(text, insertType) {
-    console.log('📝 insertToWordWithType: 开始插入文本');
-    console.log('📝 要插入的文本长度:', text.length);
-    console.log('📝 插入类型:', insertType);
+            console.log('insertToWordWithType: 开始插入文本');
+            console.log('要插入的文本长度:', text.length);
+            console.log('插入类型:', insertType);
     
     return new Promise((resolve, reject) => {
         Word.run(async (context) => {
@@ -786,40 +1220,40 @@ async function insertToWordWithType(text, insertType) {
                 
                 switch (insertType) {
                     case 'replace':
-                        console.log('📝 执行替换选中文本操作');
+                        console.log('执行替换选中文本操作');
                         // 替换选中的文本
                         const selection = context.document.getSelection();
                         selection.insertText(text, Word.InsertLocation.replace);
                         break;
                         
                     case 'append':
-                        console.log('📝 执行追加到文档末尾操作');
+                        console.log('执行追加到文档末尾操作');
                         // 追加到文档末尾
                         const body = context.document.body;
                         body.insertParagraph('\n' + text, Word.InsertLocation.end);
                         break;
                         
                     case 'cursor':
-                        console.log('📝 执行在光标位置插入操作');
+                        console.log('执行在光标位置插入操作');
                         // 在光标位置插入
                         const range = context.document.getSelection();
                         range.insertText(text, Word.InsertLocation.after);
                         break;
                         
                     case 'comment':
-                        console.log('📝 执行生成批注操作');
+                        console.log('执行生成批注操作');
                         // 为选中文本添加批注
                         const selectionForComment = context.document.getSelection();
                         selectionForComment.load('isEmpty');
                         await context.sync();
                         
                         if (selectionForComment.isEmpty) {
-                            console.log('📝 没有选中文本，将在文档末尾插入批注内容');
+                            console.log('没有选中文本，将在文档末尾插入批注内容');
                             // 如果没有选中文本，在文档末尾插入内容
                             const body = context.document.body;
                             body.insertParagraph('\n【审批建议】\n' + text, Word.InsertLocation.end);
                         } else {
-                            console.log('📝 为选中文本添加批注');
+                            console.log('为选中文本添加批注');
                             // 添加批注
                             selectionForComment.insertComment(text);
                         }
@@ -829,13 +1263,13 @@ async function insertToWordWithType(text, insertType) {
                         throw new Error(`未知的插入类型: ${insertType}`);
                 }
                 
-                console.log('📝 正在同步到Word...');
+                console.log('正在同步到Word...');
     await context.sync();
-                console.log('📝 插入完成！');
+                console.log('插入完成！');
                 
                 resolve();
             } catch (error) {
-                console.error('📝 插入到Word时出错:', error);
+                console.error('插入到Word时出错:', error);
                 reject(error);
             }
         });
@@ -887,7 +1321,7 @@ function fallbackCopy(text) {
 }
 
 function handleClear() {
-    console.log('🗑️ 开始清空操作...');
+            console.log('开始清空操作...');
     
     // 分步骤执行，每一步都有独立的错误处理
     
@@ -975,7 +1409,7 @@ function handleClear() {
 
 function displayResult(result) {
     try {
-        console.log('📊 开始显示结果，长度:', result ? result.length : 0);
+        console.log('开始显示结果，长度:', result ? result.length : 0);
         
         currentResult = result;
         const resultBox = document.getElementById('resultBox');
@@ -1011,14 +1445,14 @@ function displayResult(result) {
             console.log('✅ 插入按钮已启用');
         }
         
-        console.log('📊 结果显示完成');
+        console.log('结果显示完成');
         
     } catch (error) {
         console.error('❌ 显示结果时出错:', error);
         console.error('错误堆栈:', error.stack);
         
         // 降级处理：直接在控制台显示结果
-        console.log('📊 降级处理 - 结果内容:', result);
+        console.log('降级处理 - 结果内容:', result);
     }
 }
 
@@ -1027,27 +1461,21 @@ function createLoadingHTML(message) {
     return `
         <div class="loading-animation">
             <div class="loading-spinner"></div>
-            <div class="loading-dots">
-                <div class="loading-dot"></div>
-                <div class="loading-dot"></div>
-                <div class="loading-dot"></div>
-            </div>
         </div>
-        <div class="loading-text">${message}</div>
     `;
 }
 
 function showLoading(message) {
     const resultBox = document.getElementById('resultBox');
     
-    // 创建现代化的加载动画
-    resultBox.innerHTML = createLoadingHTML(message);
+    // 创建简化的加载动画
+    resultBox.innerHTML = createLoadingHTML();
     resultBox.classList.add('loading');
     
     // 禁用按钮（startBtn和continueBtn不存在，跳过）
     console.log('跳过禁用不存在的按钮');
     
-    console.log('🔄 显示加载状态:', message);
+    console.log('🔄 显示加载状态');
 }
 
 function hideLoading() {
@@ -1101,10 +1529,10 @@ function showUserFriendlyMessage(message) {
             }, 5000);
         }
         
-        console.log('💬 用户提示:', message);
+        console.log('用户提示:', message);
     } catch (error) {
         console.warn('显示用户友好消息时出错:', error);
-        console.log('💬 用户提示:', message);
+        console.log('用户提示:', message);
     }
 }
 
@@ -1155,6 +1583,13 @@ function updateUI() {
             hideCustomInput();
         }
         
+        // 更新企业数据输入框显示
+        if (currentTool === 'enterprise') {
+            showEnterpriseInput();
+        } else {
+            hideEnterpriseInput();
+        }
+        
         console.log('UI状态已更新');
     } catch (error) {
         console.warn('更新UI时出错:', error);
@@ -1185,15 +1620,300 @@ function hideCustomInput() {
     }
 }
 
+// 显示企业数据输入框
+function showEnterpriseInput() {
+    const container = document.getElementById('enterpriseInputContainer');
+    if (container) {
+        container.classList.remove('hidden');
+        
+        // 聚焦到输入框
+        const textarea = document.getElementById('enterpriseInputTextarea');
+        if (textarea) {
+            setTimeout(() => {
+                textarea.focus();
+            }, 100);
+        }
+    }
+}
+
+// 隐藏企业数据输入框
+function hideEnterpriseInput() {
+    const container = document.getElementById('enterpriseInputContainer');
+    if (container) {
+        container.classList.add('hidden');
+    }
+}
+
 // 获取用户输入
 function getUserInput() {
-    if (currentTool === 'custom') {
+    // 检查当前工具是否需要用户输入
+    const toolConfig = AI_TOOLS[currentTool];
+    if (!toolConfig || !toolConfig.needsInput) {
+        return '';
+    }
+    
+    // 根据工具类型获取相应的输入
+    if (currentTool === 'enterprise') {
+        const textarea = document.getElementById('enterpriseInputTextarea');
+        if (textarea) {
+            return textarea.value.trim();
+        }
+    } else {
+        // 总结摘要、语法修正等使用自定义输入框
         const textarea = document.getElementById('customInputTextarea');
         if (textarea) {
             return textarea.value.trim();
         }
     }
+    
     return '';
+}
+
+// 语言处理相关函数
+function handleLanguageChange(language) {
+    console.log('切换语言:', language);
+    currentLanguage = language;
+    updateLanguageDisplay();
+}
+
+function updateLanguageDisplay() {
+    const texts = LANGUAGE_TEXTS[currentLanguage];
+    if (!texts) {
+        console.error('未找到语言配置:', currentLanguage);
+        return;
+    }
+    
+    console.log('更新界面语言为:', currentLanguage);
+    
+    // 更新所有带有data-i18n属性的元素
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (texts[key]) {
+            element.textContent = texts[key];
+        }
+    });
+    
+    // 更新所有带有 data-i18n-placeholder 属性的元素
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        if (texts[key]) {
+            element.placeholder = texts[key];
+        }
+    });
+    
+    // 更新placeholder
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        if (texts[key]) {
+            element.placeholder = texts[key];
+        }
+    });
+    
+    // 如果翻译工具已选择目标语言，更新翻译按钮文本
+    // 更新翻译按钮文本
+    const translateBtn = document.querySelector('[data-tool="translate"]');
+    if (translateBtn) {
+        if (currentTool === 'translate' && selectedTranslateLanguage) {
+            updateTranslateButtonText(translateBtn, selectedTranslateLanguage);
+        } else {
+            // 如果没有选择翻译目标语言，显示默认文本
+            resetTranslateButtonText();
+        }
+    }
+    
+
+    
+    console.log('界面语言更新完成');
+}
+
+function getLanguageNameForPrompt(languageCode) {
+    const languageMap = {
+        'zh-cn': '中文',
+        'en': 'English',
+        'th': 'Thai',
+        'ja': '日本語',
+        'zh-tw': '繁體中文'
+    };
+    return languageMap[languageCode] || '中文';
+}
+
+function getProcessingText() {
+    const processingTexts = {
+        'zh-cn': '处理中...',
+        'en': 'Processing...',
+        'th': 'กำลังประมวลผล...',
+        'ja': '処理中...',
+        'zh-tw': '處理中...'
+    };
+    return processingTexts[currentLanguage] || '处理中...';
+}
+
+// 翻译功能相关函数
+function showTranslateModal() {
+    const modal = document.getElementById('translateModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        console.log('显示翻译语言选择模态框');
+    }
+}
+
+function hideTranslateModal() {
+    const modal = document.getElementById('translateModal');
+    if (modal) {
+        modal.style.display = 'none';
+        console.log('隐藏翻译语言选择模态框');
+    }
+}
+
+function handleTranslateLanguageSelection(targetLang) {
+    console.log('选择翻译目标语言:', targetLang);
+    selectedTranslateLanguage = targetLang;
+    
+    // 设置翻译工具为当前工具
+    currentTool = 'translate';
+    
+    // 更新按钮选中状态和显示文本
+    document.querySelectorAll('.ai-tool-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    const translateBtn = document.querySelector('[data-tool="translate"]');
+    if (translateBtn) {
+        translateBtn.classList.add('selected');
+        // 更新按钮显示文本
+        updateTranslateButtonText(translateBtn, targetLang);
+    }
+    
+    // 隐藏自定义输入框
+    hideCustomInput();
+    
+    // 更新UI状态
+    updateUI();
+    
+    // 隐藏模态框
+    hideTranslateModal();
+    
+    console.log(`翻译工具设置完成，目标语言: ${targetLang}`);
+}
+
+function updateTranslateButtonText(button, targetLang) {
+    const texts = LANGUAGE_TEXTS[currentLanguage];
+    if (!texts || !targetLang) return;
+    
+    const translatePrefix = texts['translate.to'] || '翻译成';
+    const targetLanguageName = getTargetLanguageName(targetLang);
+    
+    button.textContent = `${translatePrefix} ${targetLanguageName}`;
+    
+    console.log(`翻译按钮文本已更新: ${button.textContent}`);
+}
+
+function resetTranslateButtonText() {
+    const translateBtn = document.querySelector('[data-tool="translate"]');
+    if (translateBtn) {
+        const texts = LANGUAGE_TEXTS[currentLanguage];
+        const baseText = texts ? texts['btn.translate'] : '翻译';
+        translateBtn.textContent = baseText;
+        console.log(`翻译按钮文本已重置: ${translateBtn.textContent}`);
+    }
+}
+
+function getTargetLanguageName(langCode) {
+    const languageNames = {
+        'en': 'English',
+        'zh-cn': '中文',
+        'zh-tw': '繁體中文',
+        'ja': '日本語',
+        'ko': '한국어',
+        'th': 'ไทย',
+        'fr': 'Français',
+        'de': 'Deutsch',
+        'es': 'Español'
+    };
+    return languageNames[langCode] || langCode;
+}
+
+// 企业数据模态框相关功能
+function resetEnterpriseButtonText() {
+    const enterpriseBtn = document.querySelector('[data-tool="enterprise"]');
+    if (enterpriseBtn) {
+        const texts = LANGUAGE_TEXTS[currentLanguage];
+        enterpriseBtn.textContent = texts['btn.enterprise'] || '企业数据';
+        console.log('企业数据按钮文本已重置');
+    }
+}
+
+// 界面切换功能
+function showMainInterface() {
+    const mainInterface = document.getElementById('mainInterface');
+    const resultInterface = document.getElementById('resultInterface');
+    
+    if (mainInterface && resultInterface) {
+        mainInterface.style.display = 'block';
+        resultInterface.style.display = 'none';
+        console.log('切换到主界面');
+    }
+}
+
+function showResultInterface() {
+    const mainInterface = document.getElementById('mainInterface');
+    const resultInterface = document.getElementById('resultInterface');
+    
+    if (mainInterface && resultInterface) {
+        mainInterface.style.display = 'none';
+        resultInterface.style.display = 'block';
+        console.log('切换到结果界面');
+    }
+}
+
+// API Key 相关功能
+function maskApiKey() {
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    if (apiKeyInput && apiKeyInput.value) {
+        const value = apiKeyInput.value;
+        if (value.length > 8) {
+            // 显示前4个字符和后4个字符，中间用星号替换
+            const start = value.substring(0, 4);
+            const end = value.substring(value.length - 4);
+            const middle = '*'.repeat(value.length - 8);
+            apiKeyInput.setAttribute('data-original-value', value);
+            apiKeyInput.value = start + middle + end;
+        }
+    }
+}
+
+function unmaskApiKey() {
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    if (apiKeyInput) {
+        const originalValue = apiKeyInput.getAttribute('data-original-value');
+        if (originalValue) {
+            apiKeyInput.value = originalValue;
+        }
+    }
+}
+
+function getApiKey() {
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    if (apiKeyInput) {
+        // 如果有原始值，返回原始值，否则返回当前值
+        const originalValue = apiKeyInput.getAttribute('data-original-value');
+        return originalValue ? originalValue.trim() : apiKeyInput.value.trim();
+    }
+    return '';
+}
+
+function validateApiKey() {
+    const apiKey = getApiKey();
+    
+    if (!apiKey) {
+        return { valid: false, message: '请输入API Key' };
+    }
+    
+    // 基本格式验证 - 应该以 app- 开头，且有足够的长度
+    if (!apiKey.startsWith('app-') || apiKey.length < 20) {
+        return { valid: false, message: 'API Key格式不正确，应该以app-开头且有足够长度' };
+    }
+    
+    return { valid: true, message: 'API Key格式正确' };
 }
 
 // 调试工具函数 - 在浏览器控制台中可以手动调用
@@ -1281,7 +2001,7 @@ window.debugWordGPT = {
             
             if (selection.text && selection.text.trim().length > 0) {
                 console.log('✅ 发现选中文本:', selection.text);
-                console.log('📝 文本长度:', selection.text.length);
+                console.log('文本长度:', selection.text.length);
                 
                 // 自动选择翻译工具（startBtn不存在，无法自动处理）
                 debugWordGPT.selectTool('translate');

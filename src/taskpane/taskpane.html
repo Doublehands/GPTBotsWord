@@ -23,7 +23,9 @@
 
         /* Logo 头部样式 */
         .header-logo {
-            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 20px 16px 8px 16px;
             background: #ffffff;
             margin-bottom: 0;
@@ -38,6 +40,283 @@
             box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
         }
 
+        /* 头部控制器样式 */
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 地球图标语言选择器 */
+        .language-selector-container {
+            position: relative;
+        }
+
+        .language-globe-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 3px;
+            background: #fff;
+            color: #374151;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .language-globe-btn:hover {
+            background: #f0fdfa;
+            color: #0D7377;
+        }
+
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 160px;
+            display: none;
+            margin-top: 4px;
+        }
+
+        .language-dropdown.active {
+            display: block;
+        }
+
+        .language-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #374151;
+            transition: all 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .language-option:hover {
+            background: #f0fdfa;
+            color: #0D7377;
+        }
+
+        .language-option:first-child {
+            border-radius: 4px 4px 0 0;
+        }
+
+        .language-option:last-child {
+            border-radius: 0 0 4px 4px;
+        }
+
+        /* 设置图标按钮 */
+        .settings-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 3px;
+            background: #fff;
+            color: #374151;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-btn:hover {
+            background: #f0fdfa;
+            color: #0D7377;
+        }
+
+        .settings-btn.active {
+            border-color: #033646;
+            background: #033646;
+            color: #dbfaf9;
+        }
+
+        /* 翻译语言选择模态框样式 */
+        .translate-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .translate-modal-content {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+            margin: 20px;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .translate-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 20px 15px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .translate-modal-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .translate-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .translate-modal-close:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .translate-modal-body {
+            padding: 20px;
+        }
+
+        .translate-language-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .translate-lang-btn {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 4px;
+            background: #ffffff;
+            color: #374151;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .translate-lang-btn:hover {
+            border-color: #0D7377;
+            background: #f0fdfa;
+            color: #0D7377;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(13, 115, 119, 0.15);
+        }
+
+        .translate-lang-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(13, 115, 119, 0.2);
+        }
+
+        /* API Key 输入框样式 */
+        .api-key-container {
+            margin-bottom: 20px;
+        }
+
+        .api-key-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .api-key-input-wrapper:focus-within {
+            border-color: #0D7377;
+            box-shadow: 0 0 0 3px rgba(13, 115, 119, 0.1);
+        }
+
+        .api-key-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .api-key-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            background: transparent;
+            color: #374151;
+            letter-spacing: 0.5px;
+        }
+
+        .api-key-input::placeholder {
+            color: #9ca3af;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .api-key-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            margin-left: 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .api-key-toggle:hover {
+            background: #f3f4f6;
+        }
+
+        .section-title.api-key::before {
+            content: "";
+        }
+
         .container {
             max-width: 400px;
             margin: 0 auto;
@@ -46,14 +325,14 @@
 
         .section {
             background: #ffffff;
-            border-radius: 16px;
+            border-radius: 8px;
             box-shadow: 0 4px 12px rgba(34, 197, 94, 0.08);
             margin-bottom: 12px;
             padding: 18px 16px;
         }
 
         .section-title {
-            font-weight: 600;
+            font-weight: 700;
             font-size: 1.1rem;
             margin-bottom: 16px;
             color: #000000;
@@ -63,20 +342,20 @@
         }
 
         .section-title::before {
-            content: "⚙️";
+            content: "";
             font-size: 1rem;
         }
 
         .section-title.ai-tools::before {
-            content: "🤖";
+            content: "AI";
         }
 
         .section-title.conversation::before {
-            content: "💬";
+            content: "";
         }
 
         .section-title.result::before {
-            content: "📝";
+            content: "";
         }
 
         .ai-tools-btns {
@@ -92,7 +371,7 @@
             min-width: 90px;
             padding: 12px 16px;
             border: none;
-            border-radius: 20px;
+            border-radius: 6px;
             background: #dbfaf9;
             color: #000000;
             font-size: 0.9rem;
@@ -109,8 +388,8 @@
         }
 
         .ai-tool-btn.selected {
-            background: #006064;
-            color: #ffffff;
+            background: #033646;
+            color: #dbfaf9;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             transform: translateY(-1px);
         }
@@ -162,7 +441,7 @@
             flex: 1;
             padding: 10px 16px;
             border: none;
-            border-radius: 16px;
+            border-radius: 6px;
             background: #dbfaf9;
             color: #000000;
             font-size: 0.9rem;
@@ -173,25 +452,44 @@
         }
 
         .content-source-btn.active {
-            background: #006064;
-            color: #ffffff;
+            background: #033646;
+            color: #dbfaf9;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             transform: translateY(-1px);
         }
 
         .result-box {
             background: #ffffff;
-            border-radius: 16px;
+            border-radius: 8px;
             padding: 20px;
             min-height: 120px;
+            max-height: 250px;
             color: #000000;
             font-size: 0.95rem;
             line-height: 1.6;
             white-space: pre-wrap;
             word-wrap: break-word;
-            max-height: 300px;
             overflow-y: auto;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 自定义滚动条样式 */
+        .result-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .result-box::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .result-box::-webkit-scrollbar-thumb {
+            background: #0D7377;
+            border-radius: 4px;
+        }
+
+        .result-box::-webkit-scrollbar-thumb:hover {
+            background: #033646;
         }
 
         .result-box.loading {
@@ -215,62 +513,20 @@
             width: 32px;
             height: 32px;
             border: 3px solid rgba(0, 0, 0, 0.2);
-            border-top: 3px solid #006064;
+            border-top: 3px solid #0D7377;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-right: 12px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .loading-dots {
-            display: flex;
-            gap: 4px;
-        }
 
-        .loading-dot {
-            width: 6px;
-            height: 6px;
-            background: #006064;
-            border-radius: 50%;
-            animation: bounce 1.4s ease-in-out infinite both;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-        }
-
-        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
-        .loading-dot:nth-child(3) { animation-delay: 0s; }
-
-        .loading-text {
-            font-size: 0.9rem;
-            color: #6b7280;
-            animation: pulse 2s ease-in-out infinite;
-            text-align: center;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
 
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
 
-        @keyframes bounce {
-            0%, 80%, 100% {
-                transform: scale(0);
-            }
-            40% {
-                transform: scale(1);
-            }
-        }
 
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 0.7;
-            }
-            50% {
-                opacity: 1;
-            }
-        }
 
 
 
@@ -298,32 +554,32 @@
         }
 
         .result-action-btn.primary {
-            background: #89ffdd;
-            color: #000000;
+            background: #033646;
+            color: #dbfaf9;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-            border-radius: 25px;
+            border-radius: 8px;
             font-weight: 600;
             letter-spacing: 0.5px;
         }
 
         .result-action-btn.primary:hover:not(:disabled) {
-            background: #66ffcc;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: #0D7377;
+            box-shadow: 0 8px 25px rgba(3, 54, 70, 0.3);
             transform: translateY(-3px);
         }
 
         .result-action-btn.secondary {
-            background: #89ffdd;
-            color: #000000;
+            background: #033646;
+            color: #dbfaf9;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-            border-radius: 25px;
+            border-radius: 8px;
             font-weight: 600;
             letter-spacing: 0.5px;
         }
 
         .result-action-btn.secondary:hover:not(:disabled) {
-            background: #66ffcc;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: #0D7377;
+            box-shadow: 0 8px 25px rgba(3, 54, 70, 0.3);
             transform: translateY(-3px);
         }
 
@@ -348,7 +604,7 @@
             border: 2px solid #f87171;
             color: #dc2626;
             padding: 14px;
-            border-radius: 12px;
+            border-radius: 6px;
             font-size: 0.9rem;
             font-weight: 500;
             margin-bottom: 12px;
@@ -357,10 +613,10 @@
 
         .success-message {
             background: #dbfaf9;
-            border: 2px solid #006064;
+            border: 2px solid #0D7377;
             color: #000000;
             padding: 14px;
-            border-radius: 12px;
+            border-radius: 6px;
             font-size: 0.9rem;
             font-weight: 500;
             margin-bottom: 12px;
@@ -387,7 +643,7 @@
 
         .custom-input-label {
             font-size: 0.9rem;
-            font-weight: 600;
+            font-weight: 700;
             color: #000000;
             margin-bottom: 10px;
         }
@@ -396,7 +652,7 @@
             width: 100%;
             min-height: 90px;
             padding: 14px;
-            border-radius: 12px;
+            border-radius: 6px;
             border: none;
             background: #ffffff;
             font-size: 0.9rem;
@@ -418,10 +674,57 @@
             color: #9ca3af;
         }
 
+        /* 企业数据输入框样式 */
+        .enterprise-input-container {
+            margin-top: 16px;
+            padding: 18px;
+            background: #dbfaf9;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .enterprise-input-container.hidden {
+            display: none;
+        }
+
+        .enterprise-input-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+
+        .enterprise-input-textarea {
+            width: 100%;
+            min-height: 90px;
+            padding: 14px;
+            border-radius: 6px;
+            border: none;
+            background: #ffffff;
+            font-size: 0.9rem;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            color: #000000;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .enterprise-input-textarea:focus {
+            outline: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: #ffffff;
+        }
+
+        .enterprise-input-textarea::placeholder {
+            color: #9ca3af;
+        }
+
         /* 主要布局区域 */
         .main-operation-area {
             background: #ffffff;
-            border-radius: 20px;
+            border-radius: 8px;
             padding: 20px;
             margin-bottom: 16px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
@@ -429,7 +732,7 @@
 
         .result-preview-area {
             background: #ffffff;
-            border-radius: 20px;
+            border-radius: 8px;
             padding: 20px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
         }
@@ -562,7 +865,7 @@
             min-width: 120px;
             padding: 10px 16px;
             border: none;
-            border-radius: 16px;
+            border-radius: 6px;
             background: #dbfaf9;
             color: #000000;
             font-size: 0.9rem;
@@ -580,10 +883,68 @@
         }
 
         .insert-position-btn.active {
-            background: #006064;
-            color: #ffffff;
+            background: #033646;
+            color: #dbfaf9;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             transform: translateY(-1px);
+        }
+
+        /* 界面切换样式 */
+        .interface-page {
+            width: 100%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Header 样式 */
+        .section-header {
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-align: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .section-header .section-title {
+            margin: 0;
+            line-height: 36px;
+        }
+
+        /* 返回按钮样式 */
+        .back-button {
+            width: 32px;
+            height: 28px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            color: #000000;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-align: center;
+            align-items: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            -ms-flex-negative: 0;
+            flex-shrink: 0;
+        }
+
+        .back-button:hover {
+            color: #0D7377;
+            transform: translateY(-1px);
+        }
+
+        .back-button:active {
+            color: #033646;
+            transform: translateY(0px);
         }
     </style>
 </head>
@@ -592,65 +953,146 @@
     <!-- Logo 头部 -->
     <div class="header-logo">
         <img src="GPTBots.png" alt="GPTBots Logo" />
+        <!-- 头部控制器 - 右上角 -->
+        <div class="header-controls">
+            <!-- 语言选择器 -->
+            <div class="language-selector-container">
+                <button class="language-globe-btn" id="languageGlobeBtn">🌍</button>
+                <div class="language-dropdown" id="languageDropdown">
+                    <button class="language-option" data-lang="zh-cn">中文 (简体)</button>
+                    <button class="language-option" data-lang="en">English</button>
+                    <button class="language-option" data-lang="th">ไทย (Thai)</button>
+                    <button class="language-option" data-lang="ja">日本語 (Japanese)</button>
+                    <button class="language-option" data-lang="zh-tw">中文 (繁體)</button>
+                </div>
+            </div>
+            <!-- 设置按钮 -->
+            <button class="settings-btn" id="settingsBtn">⚙️</button>
+        </div>
     </div>
     
+    <!-- 翻译语言选择模态框 -->
+    <div class="translate-modal" id="translateModal" style="display: none;">
+        <div class="translate-modal-content">
+            <div class="translate-modal-header">
+                <h3 data-i18n="translate.selectLanguage">选择翻译目标语言</h3>
+                <button class="translate-modal-close" id="translateModalClose">&times;</button>
+            </div>
+            <div class="translate-modal-body">
+                <div class="translate-language-options">
+                    <button class="translate-lang-btn" data-target-lang="en" data-i18n="lang.english">English</button>
+                    <button class="translate-lang-btn" data-target-lang="zh-cn" data-i18n="lang.chinese">中文</button>
+                    <button class="translate-lang-btn" data-target-lang="ja" data-i18n="lang.japanese">日本語</button>
+                    <button class="translate-lang-btn" data-target-lang="ko" data-i18n="lang.korean">한국어</button>
+                    <button class="translate-lang-btn" data-target-lang="th" data-i18n="lang.thai">ไทย</button>
+                    <button class="translate-lang-btn" data-target-lang="fr" data-i18n="lang.french">Français</button>
+                    <button class="translate-lang-btn" data-target-lang="de" data-i18n="lang.german">Deutsch</button>
+                    <button class="translate-lang-btn" data-target-lang="es" data-i18n="lang.spanish">Español</button>
+                    <button class="translate-lang-btn" data-target-lang="zh-tw" data-i18n="lang.traditional">繁體中文</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     <div class="container">
-        <!-- Section 1: 主要操作区域 -->
-        <div class="section">
+        <!-- 第一个界面：配置和工具选择 -->
+        <div id="mainInterface" class="interface-page">
+            <!-- Section 1: 主要操作区域 -->
+            <div class="section">
+                <!-- GPTBots API Key - 默认隐藏 -->
+                <div class="api-key-section" id="apiKeySection" style="display: none;">
+                    <div class="section-title api-key" data-i18n="apiKey.title">GPTBots API Key</div>
+                    <div class="api-key-container">
+                        <div class="api-key-input-wrapper">
+                            <img src="GPTBots-blackicon.png" alt="GPTBots" class="api-key-icon" />
+                            <input type="password" 
+                                   class="api-key-input" 
+                                   id="apiKeyInput" 
+                                   data-i18n-placeholder="apiKey.placeholder"
+                                   placeholder="app-xxxxxxxxxxxxxxxxxxxxxxx"
+                                   value="app-nHIn7Ghs7maO6D3vVpnLm489" />
+
+                        </div>
+                    </div>
+                </div>
+
                 <!-- AI Tools -->
-                <div class="section-title ai-tools">技能</div>
+                <div class="section-title ai-tools" data-i18n="skills">技能</div>
                 <div class="ai-tools-btns">
-                    <button class="ai-tool-btn" data-tool="translate">翻译（中→英）</button>
-                    <button class="ai-tool-btn" data-tool="polish">润色</button>
-                    <button class="ai-tool-btn" data-tool="academic">审批建议</button>
-                    <button class="ai-tool-btn" data-tool="summary">总结</button>
-                    <button class="ai-tool-btn" data-tool="grammar">修改语法</button>
-                    <button class="ai-tool-btn selected" data-tool="custom">自定义</button>
+                    <button class="ai-tool-btn" data-tool="translate" data-i18n="btn.translate">深度翻译</button>
+                    <button class="ai-tool-btn" data-tool="polish" data-i18n="btn.polish">内容润色</button>
+                    <button class="ai-tool-btn" data-tool="academic" data-i18n="btn.academic">审批建议</button>
+                    <button class="ai-tool-btn" data-tool="summary" data-i18n="btn.summary">总结摘要</button>
+                    <button class="ai-tool-btn" data-tool="grammar" data-i18n="btn.grammar">语法修正</button>
+                    <button class="ai-tool-btn" data-tool="enterprise" data-i18n="btn.enterprise">企业数据</button>
+                </div>
+                
+                <!-- 企业数据输入框 -->
+                <div class="enterprise-input-container hidden" id="enterpriseInputContainer">
+                    <div class="enterprise-input-label">
+                        <span data-i18n="enterprise.inputLabel">请描述您需要的企业数据</span>
+                    </div>
+                    <textarea class="enterprise-input-textarea" id="enterpriseInputTextarea" 
+                              data-i18n-placeholder="enterprise.inputPlaceholder"
+                              placeholder="例如：上季度销售数据、去年财务报表、客户满意度调研等..."></textarea>
                 </div>
                 
                 <!-- 自定义需求输入框 -->
-                <div class="custom-input-container" id="customInputContainer">
-                    <textarea class="custom-input-textarea" id="customInputTextarea" placeholder="GPTBots会根据你的需求生成内容..."></textarea>
+                <div class="custom-input-container hidden" id="customInputContainer">
+                    <div class="custom-input-label">
+                        <span data-i18n="custom.inputLabel">请描述您的具体需求</span>
+                    </div>
+                    <textarea class="custom-input-textarea" id="customInputTextarea" 
+                              data-i18n-placeholder="custom.inputPlaceholder"
+                              placeholder="例如：总结要点、修正语法错误、特定格式要求等..."></textarea>
                 </div>
+                
+
 
                 <!-- Target Content -->
-                <div class="section-title conversation" style="margin-top: 20px;">目标内容</div>
+                <div class="section-title conversation" style="margin-top: 20px;" data-i18n="targetContent">目标内容</div>
                 <div class="content-source">
-                    <button class="content-source-btn active" data-source="selection">选中文本</button>
-                    <button class="content-source-btn" data-source="document">整个文档</button>
+                    <button class="content-source-btn active" data-source="selection" data-i18n="btn.selection">选中文本</button>
+                    <button class="content-source-btn" data-source="document" data-i18n="btn.document">整个文档</button>
                 </div>
 
                 <!-- 开始处理按钮 -->
                 <div class="process-controls" style="margin-top: 20px;">
                     <button class="result-action-btn primary" id="copyBtn">
-                        <span>🚀</span>
-                        <span>开始处理</span>
+                        <span data-i18n="btn.start">开始处理</span>
                     </button>
                 </div>
-            </div>
+                            </div>
+        </div>
 
-        <!-- Section 2: 结果预览区域 -->
-        <div class="result-preview-area">
-            <!-- Results -->
-                <div class="section-title result">结果预览</div>
+        <!-- 第二个界面：结果预览和插入选项 -->
+        <div id="resultInterface" class="interface-page" style="display: none;">
+            <!-- Section 1: 结果预览区域 -->
+            <div class="section">
+                <div class="section-header">
+                    <button class="back-button" id="backBtn">←</button>
+                    <div class="section-title result" data-i18n="resultPreview">结果预览</div>
+                </div>
                 <div class="error-message hidden" id="errorMessage"></div>
                 <div class="success-message hidden" id="successMessage"></div>
                 <div class="result-box" id="resultBox">
+                </div>
             </div>
 
-            <!-- 插入选项和按钮 -->
-        <div class="section">
-                <div class="section-title">生成位置</div>
+            <!-- Section 2: 插入选项和按钮 -->
+            <div class="section">
+                <div class="section-title" data-i18n="insertPosition">生成位置</div>
                 <div class="insert-position-btns">
-                    <button class="insert-position-btn active" data-position="replace">替换选中文本</button>
-                    <button class="insert-position-btn" data-position="append">添加至末尾</button>
-                    <button class="insert-position-btn" data-position="cursor">光标位置插入</button>
-                    <button class="insert-position-btn" data-position="comment">生成批注</button>
+                    <button class="insert-position-btn active" data-position="replace" data-i18n="btn.replace">替换选中文本</button>
+                    <button class="insert-position-btn" data-position="append" data-i18n="btn.append">添加至末尾</button>
+                    <button class="insert-position-btn" data-position="cursor" data-i18n="btn.cursor">光标位置插入</button>
+                    <button class="insert-position-btn" data-position="comment" data-i18n="btn.comment">生成批注</button>
                 </div>
                 <div class="insert-action-container">
                     <button class="result-action-btn secondary" id="insertBtn">
-                        <span>📝</span>
-                        <span>插入文档</span>
+                        <span data-i18n="btn.insert">插入文档</span>
                     </button>
                 </div>
             </div>

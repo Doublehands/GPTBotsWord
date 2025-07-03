@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>翻译功能测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .translate-btn {
+            padding: 12px 20px;
+            border: 2px solid #006064;
+            border-radius: 8px;
+            background: #dbfaf9;
+            color: #000;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        .translate-btn:hover {
+            background: #b2e2e0;
+            transform: translateY(-2px);
+        }
+        .translate-btn.selected {
+            background: #006064;
+            color: #ffffff;
+        }
+        .language-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .lang-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #374151;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .lang-btn:hover {
+            border-color: #006064;
+            background: #f0fdfa;
+            color: #006064;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #f3f4f6;
+            border-left: 4px solid #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>翻译功能测试</h1>
+    
+    <div class="test-section">
+        <h3>1. 语言选择</h3>
+        <select id="interfaceLanguage">
+            <option value="zh-cn">中文 (简体)</option>
+            <option value="en">English</option>
+            <option value="th">ไทย (Thai)</option>
+            <option value="ja">日本語 (Japanese)</option>
+            <option value="zh-tw">中文 (繁體)</option>
+        </select>
+        <button onclick="updateInterface()">切换界面语言</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. 翻译按钮</h3>
+        <button class="translate-btn" id="translateBtn" onclick="showLanguageSelection()">
+            翻译
+        </button>
+        <div class="status" id="status">点击翻译按钮选择目标语言</div>
+    </div>
+    
+    <div class="test-section" id="languageSelection" style="display: none;">
+        <h3>3. 选择翻译目标语言</h3>
+        <div class="language-buttons">
+            <button class="lang-btn" onclick="selectTarget('en')">English</button>
+            <button class="lang-btn" onclick="selectTarget('zh-cn')">中文</button>
+            <button class="lang-btn" onclick="selectTarget('ja')">日本語</button>
+            <button class="lang-btn" onclick="selectTarget('ko')">한국어</button>
+            <button class="lang-btn" onclick="selectTarget('th')">ไทย</button>
+            <button class="lang-btn" onclick="selectTarget('fr')">Français</button>
+            <button class="lang-btn" onclick="selectTarget('de')">Deutsch</button>
+            <button class="lang-btn" onclick="selectTarget('es')">Español</button>
+            <button class="lang-btn" onclick="selectTarget('zh-tw')">繁體中文</button>
+        </div>
+        <button onclick="hideLanguageSelection()">取消</button>
+    </div>
+
+    <script>
+        // 简化的多语言配置
+        const TEXTS = {
+            'zh-cn': {
+                'btn.translate': '翻译',
+                'translate.to': '翻译成'
+            },
+            'en': {
+                'btn.translate': 'Translate',
+                'translate.to': 'Translate to'
+            },
+            'th': {
+                'btn.translate': 'แปล',
+                'translate.to': 'แปลเป็น'
+            },
+            'ja': {
+                'btn.translate': '翻訳',
+                'translate.to': '翻訳先：'
+            },
+            'zh-tw': {
+                'btn.translate': '翻譯',
+                'translate.to': '翻譯成'
+            }
+        };
+
+        const LANG_NAMES = {
+            'en': 'English',
+            'zh-cn': '中文',
+            'zh-tw': '繁體中文',
+            'ja': '日本語',
+            'ko': '한국어',
+            'th': 'ไทย',
+            'fr': 'Français',
+            'de': 'Deutsch',
+            'es': 'Español'
+        };
+
+        let currentLanguage = 'zh-cn';
+        let selectedTarget = null;
+
+        function showLanguageSelection() {
+            document.getElementById('languageSelection').style.display = 'block';
+            updateStatus('请选择翻译目标语言');
+        }
+
+        function hideLanguageSelection() {
+            document.getElementById('languageSelection').style.display = 'none';
+            updateStatus('已取消选择');
+        }
+
+        function selectTarget(target) {
+            selectedTarget = target;
+            updateTranslateButton();
+            hideLanguageSelection();
+            updateStatus(`已选择翻译目标: ${LANG_NAMES[target]}`);
+        }
+
+        function updateTranslateButton() {
+            const btn = document.getElementById('translateBtn');
+            const texts = TEXTS[currentLanguage];
+            
+            if (selectedTarget && texts) {
+                const prefix = texts['translate.to'] || '翻译成';
+                const targetName = LANG_NAMES[selectedTarget];
+                btn.textContent = `${prefix} ${targetName}`;
+                btn.classList.add('selected');
+            } else {
+                const baseText = texts ? texts['btn.translate'] : '翻译';
+                btn.textContent = baseText;
+                btn.classList.remove('selected');
+            }
+        }
+
+        function updateInterface() {
+            const select = document.getElementById('interfaceLanguage');
+            currentLanguage = select.value;
+            updateTranslateButton();
+            updateStatus(`界面语言已切换为: ${select.options[select.selectedIndex].text}`);
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // 初始化
+        updateTranslateButton();
+    </script>
+</body>
+</html> 

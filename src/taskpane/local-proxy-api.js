@@ -4,7 +4,7 @@ window.localProxyAPI = {
     // 检查本地代理是否可用
     async checkProxyAvailable() {
         try {
-            const response = await fetch('http://localhost:8080/api/v1/conversation', {
+            const response = await fetch('http://localhost:8081/api/v1/conversation', {
                 method: 'OPTIONS',
                 headers: {
                     'Content-Type': 'application/json'
@@ -22,7 +22,7 @@ window.localProxyAPI = {
         console.log('🔄 使用本地代理创建对话...');
         
         try {
-            const response = await fetch('http://localhost:8080/api/v1/conversation', {
+            const response = await fetch('http://localhost:8081/api/v1/conversation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -89,7 +89,7 @@ window.localProxyAPI = {
             
             console.log('请求体:', requestBody);
             
-            const response = await fetch('http://localhost:8080/api/v2/conversation/message', {
+            const response = await fetch('http://localhost:8081/api/v2/conversation/message', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -153,7 +153,7 @@ window.localProxyAPI = {
     
     // 完整的对话流程
     async processMessage(message, userId = 'word-gpt-user') {
-        console.log('🚀 开始完整的本地代理对话流程...');
+        console.log('开始完整的本地代理对话流程...');
         
         try {
             // 步骤1: 创建对话
