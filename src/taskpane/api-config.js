@@ -5,27 +5,27 @@
 
 // API配置对象
 const API_CONFIG = {
-    // GPTBots API基础URL
-    baseUrl: 'https://api.gptbots.ai',
+    // 使用本地代理
+    baseUrl: 'http://localhost:3001',
     
     // 创建对话端点
-    createConversationEndpoint: '/v1/conversation',
+    createConversationEndpoint: '/api/v1/conversation',
     
     // 发送消息端点
-    chatEndpoint: '/v2/conversation/message',
+    chatEndpoint: '/api/v2/conversation/message',
     
     // 请求超时时间 (毫秒)
     timeout: 30000,
     
     // 请求头配置
     headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer app-nHIn7Ghs7maO6D3vVpnLm489' // 您的API密钥
+        'Content-Type': 'application/json'
+        // Authorization 由本地代理添加
     },
     
     // 默认请求参数
     defaultParams: {
-        response_mode: 'blocking',
+        response_mode: "blocking",
         conversation_config: {
             long_term_memory: false,
             short_term_memory: false
@@ -33,7 +33,7 @@ const API_CONFIG = {
     },
     
     // 用户ID（GPTBots需要）
-    userId: 'word-gpt-plus-user', // 您可以自定义这个ID
+    userId: 'MacOSJiaqi', // 您可以自定义这个ID
     
     // API响应格式映射（根据官方文档确认）
     responseMapping: {
@@ -57,7 +57,7 @@ const API_PRESETS = {
         chatEndpoint: '/v2/conversation/message',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer app-nHIn7Ghs7maO6D3vVpnLm489'
+            'Authorization': 'Bearer app-cqAuvC3vC7d7LybynuoZdK9D'
         },
         defaultParams: {
             response_mode: 'blocking',
@@ -195,8 +195,22 @@ function parseChatResponse(response) {
             message = response.answer || response.message || response.content || response.response || response.text;
         }
         
+        // 如果output为空数组，但有conversation_id和message_id，认为是成功的空响应
+        if (!message && response.output && Array.isArray(response.output) && response.output.length === 0) {
+            if (response.conversation_id && response.message_id) {
+                message = "AI响应成功，但内容为空。请检查Agent配置或重试。";
+                console.warn('GPTBots返回空响应，可能需要检查Agent配置');
+            }
+        }
+        
+        // 如果仍然没有消息，但响应包含有效字段，提供调试信息
+        if (!message && response.conversation_id) {
+            message = `调试信息：API调用成功但无内容输出。响应：${JSON.stringify(response, null, 2)}`;
+            console.warn('GPTBots API响应无内容，完整响应:', response);
+        }
+        
         let error = getNestedValue(response, errorField);
-        if (!error) {
+        if (!error && !message) {
             error = response.error || response.message || response.detail;
         }
         
@@ -245,7 +259,7 @@ if (typeof module !== 'undefined' && module.exports) {
 /*
  * GPTBots API 配置说明：
  * 
- * 1. API密钥已设置：app-nHIn7Ghs7maO6D3vVpnLm489
+ * 1. API密钥已设置：app-cqAuvC3vC7d7LybynuoZdK9D
  * 2. 支持两步API调用：
  *    - 第一步：创建对话 (POST /v1/conversation)
  *      响应格式：{"conversation_id": "657303a8a764d47094874bbe"}
@@ -258,59 +272,4 @@ if (typeof module !== 'undefined' && module.exports) {
  *    - response_mode: "blocking" (阻塞式响应)
  *    - conversation_config: 对话配置选项
  * 5. 如需修改配置，请编辑上面的API_CONFIG对象
- */
-
-// 本地代理API配置
-window.localProxyAPI = {
-    // 本地代理服务器URL
-    proxyUrl: 'http://localhost:8081',
-    
-    // 创建对话
-    createConversation: async function() {
-        const response = await fetch(`${this.proxyUrl}/api/conversation`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                user_id: API_CONFIG.userId
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        return await response.json();
-    },
-    
-    // 发送消息
-    sendMessage: async function(conversationId, message) {
-        const response = await fetch(`${this.proxyUrl}/api/message`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                conversation_id: conversationId,
-                messages: [
-                    {
-                        role: 'user',
-                        content: message
-                    }
-                ],
-                response_mode: 'blocking',
-                conversation_config: {
-                    long_term_memory: false,
-                    short_term_memory: false
-                }
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        return await response.json();
-    }
-}; 
+ */ 

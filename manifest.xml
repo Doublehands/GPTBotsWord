@@ -4,13 +4,16 @@
   <Version>1.0.0.0</Version>
   <ProviderName>Contoso</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="GPTBots Copilot"/>
-  <Description DefaultValue="智能文档助手，让写作更高效"/>
-  <IconUrl DefaultValue="https://localhost:3000/assets/GPTBots-blackicon.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/GPTBots-blackicon.png"/>
+  <DisplayName DefaultValue="OfficeBuddy"/>
+  <Description DefaultValue="OfficeBuddy"/>
+  <IconUrl DefaultValue="https://localhost:3000/assets/GPTBotsLogo.png"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/GPTBotsLogo.png"/>
   <SupportUrl DefaultValue="https://www.contoso.com/help"/>
   <AppDomains>
     <AppDomain>https://www.contoso.com</AppDomain>
+    <AppDomain>http://localhost:3000</AppDomain>
+    <AppDomain>http://127.0.0.1:3000</AppDomain>
+    <AppDomain>https://api.gptbots.ai</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Document"/>
@@ -62,9 +65,9 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/GPTBots-blackicon.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/GPTBots-blackicon.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/GPTBots-blackicon.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/GPTBotsLogo.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/GPTBotsLogo.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/GPTBotsLogo.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812"/>
@@ -72,13 +75,13 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Get started with GPTBots Copilot!"/>
-        <bt:String id="CommandsGroup.Label" DefaultValue="GPTBots Copilot"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="GPTBots Copilot"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Get started with OfficeBuddy!"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="OfficeBuddy"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="OfficeBuddy"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="GetStarted.Description" DefaultValue="GPTBots Copilot"/>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="GPTBots Copilot"/>
+        <bt:String id="GetStarted.Description" DefaultValue="OfficeBuddy"/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="OfficeBuddy"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

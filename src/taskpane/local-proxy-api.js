@@ -3,35 +3,102 @@
 window.localProxyAPI = {
     // 检查本地代理是否可用
     async checkProxyAvailable() {
-        try {
-            const response = await fetch('http://localhost:8081/api/v1/conversation', {
-                method: 'OPTIONS',
-                headers: {
-                    'Content-Type': 'application/json'
+        const maxRetries = 3;
+        const retryDelay = 1000; // 1秒
+        let lastError = null;
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`🔍 检查本地代理可用性: http://localhost:3001 (尝试 ${attempt}/${maxRetries})`);
+                
+                // 1. 首先测试基础连接
+                const baseResponse = await fetch('http://localhost:3001/', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    },
+                    mode: 'cors',
+                    signal: AbortSignal.timeout(5000)
+                });
+
+                if (!baseResponse.ok) {
+                    throw new Error('服务未启动');
                 }
-            });
-            return response.ok;
-        } catch (error) {
-            console.log('本地代理不可用:', error.message);
-            return false;
+
+                // 2. 测试API端点
+                const apiResponse = await fetch('http://localhost:3001/api/v1/conversation', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors',
+                    signal: AbortSignal.timeout(5000)
+                });
+
+                if (apiResponse.ok) {
+                    console.log('✅ 本地代理服务器正常运行');
+                    return {
+                        available: true,
+                        status: apiResponse.status,
+                        message: '服务正常'
+                    };
+                } else {
+                    throw new Error('服务异常');
+                }
+            } catch (error) {
+                console.error(`❌ 检查失败 (尝试 ${attempt}/${maxRetries}):`, error);
+                
+                let errorMessage = '服务未启动';
+                if (error.name === 'AbortError') {
+                    errorMessage = '连接超时';
+                } else if (error.message.includes('NetworkError')) {
+                    errorMessage = '网络异常';
+                }
+                
+                lastError = {
+                    error: error,
+                    message: errorMessage
+                };
+                
+                if (attempt < maxRetries) {
+                    console.log(`等待 ${retryDelay}ms 后重试...`);
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    continue;
+                }
+            }
         }
+        
+        return {
+            available: false,
+            error: lastError.error,
+            message: lastError.message
+        };
     },
     
     // 创建对话 - 使用debug-api.html中成功的方法
-    async createConversation(userId = 'word-gpt-user') {
+    async createConversation(userId = 'MacOSJiaqi') {
         console.log('🔄 使用本地代理创建对话...');
+        console.log('📍 请求 URL: http://localhost:3001/api/v1/conversation');
+        console.log('📍 用户ID:', userId);
         
         try {
-            const response = await fetch('http://localhost:8081/api/v1/conversation', {
+            const requestBody = { user_id: userId };
+            console.log('📍 请求体:', requestBody);
+            
+            const response = await fetch('http://localhost:3001/api/v1/conversation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                     // 注意：本地代理会自动添加Authorization头
                 },
-                body: JSON.stringify({
-                    user_id: userId
-                })
+                body: JSON.stringify(requestBody),
+                mode: 'cors',
+                signal: AbortSignal.timeout(10000)
             });
+            
+            console.log('📍 响应状态:', response.status, response.statusText);
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -89,7 +156,7 @@ window.localProxyAPI = {
             
             console.log('请求体:', requestBody);
             
-            const response = await fetch('http://localhost:8081/api/v2/conversation/message', {
+            const response = await fetch('http://localhost:3001/api/v2/conversation/message', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -194,8 +261,8 @@ window.testLocalProxy = async function() {
     const isAvailable = await window.localProxyAPI.checkProxyAvailable();
     console.log('代理可用性:', isAvailable);
     
-    if (!isAvailable) {
-        console.log('❌ 本地代理不可用，请确保 local-server.js 在运行');
+    if (!isAvailable.available) {
+        console.log('❌ 本地代理不可用，请检查错误信息:', isAvailable.message);
         console.log('💡 运行命令: node local-server.js');
         return;
     }
