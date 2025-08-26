@@ -2,21 +2,21 @@
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>f182d2f0-05ef-41a9-86fb-808f4ab0c364</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Contoso</ProviderName>
+  <ProviderName>GPTBots</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="GPTBots Copilot"/>
   <Description DefaultValue="智能文档助手，让写作更高效"/>
-  <IconUrl DefaultValue="https://localhost:3000/assets/GPTBots-blackicon.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/GPTBots-blackicon.png"/>
-  <SupportUrl DefaultValue="https://www.contoso.com/help"/>
+  <IconUrl DefaultValue="https://doublehands.github.io/GPTBotsWord/assets/GPTBots-blackicon.png"/>
+  <HighResolutionIconUrl DefaultValue="https://doublehands.github.io/GPTBotsWord/assets/GPTBots-blackicon.png"/>
+  <SupportUrl DefaultValue="https://doublehands.github.io/GPTBotsWord"/>
   <AppDomains>
-    <AppDomain>https://www.contoso.com</AppDomain>
+    <AppDomain>https://doublehands.github.io</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Document"/>
   </Hosts>
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
+    <SourceLocation DefaultValue="https://doublehands.github.io/GPTBotsWord/src/taskpane/taskpane.html"/>
   </DefaultSettings>
   <Permissions>ReadWriteDocument</Permissions>
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
@@ -62,14 +62,14 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/GPTBots-blackicon.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/GPTBots-blackicon.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/GPTBots-blackicon.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://doublehands.github.io/GPTBotsWord/assets/GPTBots-blackicon.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://doublehands.github.io/GPTBotsWord/assets/GPTBots-blackicon.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://doublehands.github.io/GPTBotsWord/assets/GPTBots-blackicon.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812"/>
-        <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
+        <bt:Url id="Commands.Url" DefaultValue="https://doublehands.github.io/GPTBotsWord/src/commands/commands.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://doublehands.github.io/GPTBotsWord/src/taskpane/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GetStarted.Title" DefaultValue="Get started with GPTBots Copilot!"/>
