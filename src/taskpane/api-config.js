@@ -260,57 +260,96 @@ if (typeof module !== 'undefined' && module.exports) {
  * 5. 如需修改配置，请编辑上面的API_CONFIG对象
  */
 
-// 本地代理API配置
-window.localProxyAPI = {
-    // 本地代理服务器URL
-    proxyUrl: 'http://localhost:8081',
-    
+// 直接API调用函数
+window.directAPI = {
     // 创建对话
-    createConversation: async function() {
-        const response = await fetch(`${this.proxyUrl}/api/conversation`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                user_id: API_CONFIG.userId
-            })
-        });
+    async createConversation() {
+        console.log('🔄 创建新对话...');
         
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        try {
+            const response = await fetch(getCreateConversationUrl(), {
+                method: 'POST',
+                headers: API_CONFIG.headers,
+                body: JSON.stringify(buildCreateConversationData())
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('✅ 对话创建成功:', data);
+            
+            const parsed = parseCreateConversationResponse(data);
+            if (!parsed.success) {
+                throw new Error(parsed.error || '创建对话失败');
+            }
+            
+            return parsed.conversationId;
+            
+        } catch (error) {
+            console.error('❌ 创建对话失败:', error);
+            throw error;
         }
-        
-        return await response.json();
     },
     
     // 发送消息
-    sendMessage: async function(conversationId, message) {
-        const response = await fetch(`${this.proxyUrl}/api/message`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                conversation_id: conversationId,
-                messages: [
-                    {
-                        role: 'user',
-                        content: message
-                    }
-                ],
-                response_mode: 'blocking',
-                conversation_config: {
-                    long_term_memory: false,
-                    short_term_memory: false
+    async sendMessage(conversationId, message) {
+        console.log('🔄 发送消息...');
+        
+        try {
+            const messages = [
+                {
+                    role: 'user',
+                    content: message
                 }
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            ];
+            
+            const requestData = buildChatRequestData(conversationId, messages);
+            
+            const response = await fetch(getChatUrl(), {
+                method: 'POST',
+                headers: API_CONFIG.headers,
+                body: JSON.stringify(requestData)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('✅ 消息发送成功:', data);
+            
+            const parsed = parseChatResponse(data);
+            if (!parsed.success) {
+                throw new Error(parsed.error || '消息处理失败');
+            }
+            
+            return parsed.message;
+            
+        } catch (error) {
+            console.error('❌ 发送消息失败:', error);
+            throw error;
         }
+    },
+    
+    // 完整的对话流程
+    async processMessage(message) {
+        console.log('🚀 开始处理消息:', message);
         
-        return await response.json();
+        try {
+            // 创建对话
+            const conversationId = await this.createConversation();
+            
+            // 发送消息
+            const reply = await this.sendMessage(conversationId, message);
+            
+            console.log('🎉 消息处理完成');
+            return reply;
+            
+        } catch (error) {
+            console.error('❌ 消息处理失败:', error);
+            throw error;
+        }
     }
 }; 

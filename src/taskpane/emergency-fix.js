@@ -244,65 +244,32 @@ function emergencyFixButtons() {
                 let finalResult;
                 
                 try {
-                    // 优先使用本地代理（复制debug-api.html的成功方法）
-                    console.log('🔄 方案1: 尝试本地代理...');
+                    // 使用直接API调用
+                    console.log('🚀 尝试直接API调用...');
                     
-                    if (typeof window.localProxyAPI !== 'undefined') {
-                        const proxyResult = await window.localProxyAPI.processMessage(prompt);
+                    if (typeof window.directAPI !== 'undefined') {
+                        const apiResult = await window.directAPI.processMessage(prompt);
                         
-                        if (proxyResult.success) {
-                            finalResult = `🎉 ${AI_TOOLS[tool].name}处理结果（真实AI回复）:\n\n原文: ${cleanContent}\n\n处理结果:\n${proxyResult.message}`;
-                            console.log('🎉 本地代理调用成功！');
-                            console.log('AI回复:', proxyResult.message);
+                        if (apiResult) {
+                            finalResult = `🎉 ${AI_TOOLS[tool].name}处理结果（真实AI回复）:\n\n原文: ${cleanContent}\n\n处理结果:\n${apiResult}`;
+                            console.log('🎉 直接API调用成功！');
+                            console.log('AI回复:', apiResult);
                         } else {
-                            throw new Error(`本地代理失败: ${proxyResult.error}`);
+                            throw new Error('API返回空结果');
                         }
                     } else {
-                        throw new Error('本地代理API未加载');
+                        throw new Error('直接API未加载');
                     }
                     
-                } catch (proxyError) {
-                    console.warn('⚠️ 本地代理失败:', proxyError.message);
+                } catch (apiError) {
+                    console.warn('⚠️ 直接API调用失败:', apiError.message);
                     
-                    try {
-                        // 方案2: 尝试CORS代理
-                        console.log('🔄 方案2: 尝试CORS代理...');
-                        
-                        if (typeof window.apiWithCorsProxy !== 'undefined') {
-                            const conversationData = await window.apiWithCorsProxy.createConversation();
-                            
-                            if (conversationData && conversationData.conversation_id) {
-                                const messageData = await window.apiWithCorsProxy.sendMessage(
-                                    conversationData.conversation_id, 
-                                    prompt
-                                );
-                                
-                                if (messageData && messageData.output && messageData.output[0] && messageData.output[0].content) {
-                                    finalResult = `🎉 ${AI_TOOLS[tool].name}处理结果（真实AI回复）:\n\n原文: ${cleanContent}\n\n处理结果:\n${messageData.output[0].content.text || messageData.output[0].content}`;
-                                    console.log('🎉 CORS代理调用成功！');
-                                } else {
-                                    throw new Error('CORS代理响应格式不正确');
-                                }
-                            } else {
-                                throw new Error('CORS代理创建对话失败');
-                            }
-                        } else {
-                            throw new Error('CORS代理API未加载');
-                        }
-                        
-                    } catch (corsError) {
-                        console.warn('⚠️ CORS代理也失败:', corsError.message);
-                        
-                        // 方案3: 模拟结果（后备方案）
-                        console.log('🔄 方案3: 使用模拟结果...');
-                        console.log('⚠️ API调用失败详情:');
-                        console.log('- 本地代理:', proxyError.message);
-                        console.log('- CORS代理:', corsError.message);
-                        console.log('💡 建议: 确保本地代理服务器运行: node local-server.js');
-                        
-                        // 只在结果区显示简洁的模拟结果，不显示错误信息
-                        finalResult = `Processing...`;
-                    }
+                    // 使用模拟结果（后备方案）
+                    console.log('🔄 使用模拟结果...');
+                    console.log('⚠️ API调用失败详情:', apiError.message);
+                    
+                    // 只在结果区显示简洁的模拟结果，不显示错误信息
+                    finalResult = `Processing...`;
                 }
                 
                 // 显示最终结果

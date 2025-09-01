@@ -1029,35 +1029,55 @@ function getLanguageName(code) {
 
 async function callConversationAPI(prompt, isNewConversation = true) {
     try {
-        // 尝试使用本地代理API
-        if (typeof window.localProxyAPI !== 'undefined') {
-            console.log('🔄 使用本地代理API...');
+        console.log('🚀 开始API调用:', prompt);
+        
+        // 使用直接API调用
+        if (typeof window.directAPI !== 'undefined') {
+            console.log('✨ 使用直接API调用...');
             
-            let conversationId = currentConversationId;
-            
-            if (isNewConversation || !conversationId) {
-                console.log('📞 创建新对话...');
-                const createResult = await window.localProxyAPI.createConversation();
-                if (createResult.success) {
-                    conversationId = createResult.conversationId;
-                    currentConversationId = conversationId;
-                    console.log('✅ 对话创建成功:', conversationId);
-                } else {
-                    throw new Error('本地代理创建对话失败');
-                }
-            }
-            
-            console.log('📞 发送消息...');
-            const messageResult = await window.localProxyAPI.sendMessage(conversationId, prompt);
-            if (messageResult.success) {
-                console.log('✅ 消息发送成功');
-                return messageResult.message;
+            if (isNewConversation) {
+                // 重置对话历史
+                conversationHistory = [];
+                currentConversationId = null;
+                
+                // 使用简化的API调用
+                const reply = await window.directAPI.processMessage(prompt);
+                
+                // 添加到对话历史
+                conversationHistory.push({
+                    role: 'user',
+                    content: prompt
+                });
+                conversationHistory.push({
+                    role: 'assistant',
+                    content: reply
+                });
+                
+                return reply;
             } else {
-                throw new Error('本地代理发送消息失败');
+                // 继续现有对话
+                if (!currentConversationId) {
+                    throw new Error('缺少对话ID，请重新开始对话');
+                }
+                
+                const reply = await window.directAPI.sendMessage(currentConversationId, prompt);
+                
+                // 添加到对话历史
+                conversationHistory.push({
+                    role: 'user',
+                    content: prompt
+                });
+                conversationHistory.push({
+                    role: 'assistant',
+                    content: reply
+                });
+                
+                return reply;
             }
         }
         
-        // 如果本地代理不可用，尝试直接API调用
+        // 备用：原始API调用逻辑
+        console.log('🔄 使用备用API调用...');
         // 如果是新对话，需要先创建对话
         if (isNewConversation) {
             conversationHistory = [];
@@ -1135,8 +1155,7 @@ async function callConversationAPI(prompt, isNewConversation = true) {
         return parsedChatResult.message;
         
     } catch (error) {
-        console.error('API调用错误:', error);
-        console.log('💡 建议：确保本地代理服务器运行: node local-server.js');
+        console.error('❌ API调用失败:', error);
         
         // 抛出错误让上层函数处理
         throw new Error(`API调用失败: ${error.message}`);
